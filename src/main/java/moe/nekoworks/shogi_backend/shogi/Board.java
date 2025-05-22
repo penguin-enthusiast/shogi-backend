@@ -1,5 +1,9 @@
 package moe.nekoworks.shogi_backend.shogi;
 
+import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
+import moe.nekoworks.shogi_backend.shogi.move.DropMove;
+import moe.nekoworks.shogi_backend.shogi.move.Move;
+import moe.nekoworks.shogi_backend.shogi.move.MoveHelper;
 import moe.nekoworks.shogi_backend.shogi.piece.*;
 
 import java.util.*;
@@ -12,8 +16,8 @@ public class Board {
 
     private final Square[][] board;
     private final Set<Piece> pieces;
-
-    final private PiecesInHand piecesInHand = new PiecesInHand();
+    private final PiecesInHand piecesInHand = new PiecesInHand();
+    private final Set<Move> moves = new HashSet<>();
 
     public Board() {
         this(INITIAL_STATE_MSFEN);
@@ -181,6 +185,7 @@ public class Board {
             }
         }
 
+        updateMoves();
     }
 
     public Square getSquare(int x, int y) {
@@ -190,8 +195,13 @@ public class Board {
         return null;
     }
 
-    public Set<Piece> getPieces() {
-        return pieces;
+    public Square getSquare(Square s, int xOffset, int yOffset) {
+        int x = s.getX() + xOffset;
+        int y = s.getY() + yOffset;
+        if (0 <= x && x <= 8 && 0 <= y && y <= 8) {
+            return board[y][x];
+        }
+        return null;
     }
 
     public int[][] getPiecesInHand() {
@@ -208,14 +218,8 @@ public class Board {
         return pieces;
     }
 
-    public Set<Move> getAllLegalMoves() {
-        Set<Move> moves = getLegalMoves(true);
-        moves.addAll(getLegalMoves(false));
-        return moves;
-    }
-
-    public Set<Move> getLegalMoves(boolean isSente) {
-        Set<Move> moves = new HashSet<>();
+    public Set<BoardMove> getBoardMoves(boolean isSente) {
+        Set<BoardMove> moves = new HashSet<>();
         for (Piece p : getPiecesOnBoard()) {
             if (p.isSente() == isSente) {
                 moves.addAll(p.getLegalMoves());
@@ -224,13 +228,68 @@ public class Board {
         return moves;
     }
 
-    public Set<Move> updateMoves () {
-        Set<Move> moves = new HashSet<>();
-        for (Piece p : getPiecesOnBoard()) {
-            p.updateLegalMoves(this);
-            moves.addAll(p.getLegalMoves());
+    public Set<DropMove> getDropMoves(boolean isSente) {
+        System.out.println("DEBUG Board.getDropMoves");
+        Set<PieceEnum> pieces = piecesInHand.possibleDrops(isSente);
+        Set<DropMove> moves = new HashSet<>();
+        for (PieceEnum p : pieces) {
+            System.out.println("getting drops - " + (isSente ? "sente " : "gote ") + " - " + p.getNameJPShort());
+            moves.addAll(MoveHelper.createDropMoves(this, p, isSente));
         }
         return moves;
+    }
+
+    public Set<Move> moves() {
+        return moves;
+    }
+
+    private void updateMoves () {
+        for (Piece p : getPiecesOnBoard()) {
+            p.updateLegalMoves(this);
+        }
+        moves.clear();
+        moves.addAll(getBoardMoves(true));
+        moves.addAll(getBoardMoves(false));
+        moves.addAll(getDropMoves(true));
+        moves.addAll(getDropMoves(false));
+    }
+
+    public boolean commitMove (Move move) {
+        if (move == null) {
+            return false;
+        }
+        if (BoardMove.class == move.getClass()) {
+            return commitMove((BoardMove) move);
+        } else if (DropMove.class == move.getClass()) {
+            return commitMove((DropMove) move);
+        }
+        return false;
+    }
+
+    public boolean commitMove(BoardMove move) throws IllegalArgumentException {
+        if (move == null || move.getPiece() == null) {
+            throw new IllegalArgumentException();
+        }
+        final Piece piece = move.getPiece();
+        Set<BoardMove> moves = getBoardMoves(piece.isSente());
+        Piece targetPiece = move.getTargetSquare().getPiece();
+        if (moves.contains(move)) {
+            // make the move;
+            if (targetPiece != null) {
+                piecesInHand.add(targetPiece);
+                targetPiece.putInHand();
+            }
+            piece.setSquare(move.getTargetSquare());
+            move.getTargetSquare().setPiece(piece);
+        } else {
+            return false;
+        }
+        updateMoves();
+        return true;
+    }
+
+    public boolean commitMove(DropMove move) {
+        return false;
     }
 
     public String printBoardJP() {
@@ -278,25 +337,42 @@ public class Board {
     }
 
     // test method to visualize a piece's move. remove in the future
-    public void printAttackingSquares(Piece p) {
-        System.out.println(p + " - " + p.getSquare());
-        Set<Move> moves = p.updateLegalMoves(this);
-        HashSet<Square> squares = new HashSet<>();
-        for(Move m : moves) {
-            squares.add(m.getTargetSquare());
+    public String printAttackingSquares(Piece p) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(p).append(" - ").append(p.getSquare()).append('\n');
+        Set<BoardMove> moves = p.getLegalMoves();
+        HashSet<Square> squaresPromotion = new HashSet<>();
+        HashSet<Square> squaresNoPromotion = new HashSet<>();
+        for (BoardMove m : moves) {
+            if (m.isPromotion()) {
+                squaresPromotion.add(m.getTargetSquare());
+            } else {
+                squaresNoPromotion.add(m.getTargetSquare());
+            }
         }
 
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                if (squares.contains(board[i][j])) {
-                    System.out.print(" x ");
+                if (squaresNoPromotion.contains(board[i][j])) {
+                    sb.append(" x ");
                 }
                 else {
-                    System.out.print(" . ");
+                    sb.append(" . ");
                 }
             }
-            System.out.println();
+            if (!squaresPromotion.isEmpty()) {
+                sb.append("   ");
+                for (int j = 0; j < 9; j++) {
+                    if (squaresPromotion.contains(board[i][j])) {
+                        sb.append(" + ");
+                    } else {
+                        sb.append(" . ");
+                    }
+                }
+            }
+            sb.append('\n');
         }
+        return sb.toString();
     }
 
     // data structure to store pieces in hand
@@ -398,6 +474,27 @@ public class Board {
             return pieces;
         }
 
+        public Set<PieceEnum> possibleDrops (boolean isSente) {
+            Set<PieceEnum> pieces = new HashSet<>();
+            if (isSente) {
+                if (!fuSente.isEmpty()) pieces.add(PieceEnum.FU);
+                if (!kyouSente.isEmpty()) pieces.add(PieceEnum.KYOU);
+                if (!keiSente.isEmpty()) pieces.add(PieceEnum.KEI);
+                if (!ginSente.isEmpty()) pieces.add(PieceEnum.GIN);
+                if (!kinSente.isEmpty()) pieces.add(PieceEnum.KIN);
+                if (!kakuSente.isEmpty()) pieces.add(PieceEnum.KAKU);
+                if (!hiSente.isEmpty()) pieces.add(PieceEnum.HI);
+            } else {
+                if (!fuGote.isEmpty()) pieces.add(PieceEnum.FU);
+                if (!kyouGote.isEmpty()) pieces.add(PieceEnum.KYOU);
+                if (!keiGote.isEmpty()) pieces.add(PieceEnum.KEI);
+                if (!ginGote.isEmpty()) pieces.add(PieceEnum.GIN);
+                if (!kinGote.isEmpty()) pieces.add(PieceEnum.KIN);
+                if (!kakuGote.isEmpty()) pieces.add(PieceEnum.KAKU);
+                if (!hiGote.isEmpty()) pieces.add(PieceEnum.HI);
+            }
+            return pieces;
+        }
     }
 
 }

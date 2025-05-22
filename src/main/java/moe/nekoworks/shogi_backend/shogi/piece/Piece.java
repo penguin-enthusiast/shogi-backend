@@ -1,8 +1,11 @@
 package moe.nekoworks.shogi_backend.shogi.piece;
 
 import moe.nekoworks.shogi_backend.shogi.Board;
-import moe.nekoworks.shogi_backend.shogi.Move;
+import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
 import moe.nekoworks.shogi_backend.shogi.Square;
+import moe.nekoworks.shogi_backend.shogi.move.MoveHelper;
+import moe.nekoworks.shogi_backend.shogi.move.MovementClass;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,8 +16,7 @@ public abstract class Piece {
     private boolean isSente;
     private boolean inHand = false;
     private double lastMoved = 0;
-
-    protected Set<Move> legalMoves = new HashSet<>();
+    private Set<BoardMove> legalMoves = new HashSet<>();
 
     public Piece(boolean isSente) {
         this.isSente = isSente;
@@ -54,6 +56,7 @@ public abstract class Piece {
         }
         inHand = true;
         isSente = !isSente;
+        square = null;
         legalMoves.clear();
     }
 
@@ -66,72 +69,67 @@ public abstract class Piece {
         this.square = square;
     }
 
-    public Set<Move> getLegalMoves () {
+    public Set<BoardMove> getLegalMoves () {
         return legalMoves;
+    }
+
+    public boolean inPromotionZone() {
+        if (square == null) {
+            return false;
+        }
+        return square.isPromotionZone(isSente);
+    }
+
+    public abstract PieceEnum getPieceEnum();
+
+    public Set<BoardMove> updateLegalMoves (Board board) {
+        Set<BoardMove> moves = new HashSet<>();
+        if (inHand) {
+            return moves;
+        }
+        MovementClass movementClass = getPieceEnum().getMovementClass();
+        byte[][] movementMap = movementClass.getMovementMap(isSente);
+        for (int y = 0; y < movementClass.getSizeY(); y++) {
+            for (int x = 0; x < movementClass.getSizeX(); x++) {
+                Pair<Integer, Integer> moveClassOrigin = movementClass.getOrigin(isSente);
+                assert moveClassOrigin != null;
+                int xOffset = moveClassOrigin.getLeft() - x;
+                int yOffset = moveClassOrigin.getRight() - y;
+                if (movementMap[y][x] == 2) {
+                    Square targetSquare = board.getSquare(square, xOffset, yOffset);
+                    if (targetSquare != null) {
+                        createMove(board, this, targetSquare, moves);
+                    }
+                } else if (movementMap[y][x] == 3) {
+                    boolean moveAdded;
+                    int targetX = 0, targetY = 0;
+                    do {
+                        targetX += xOffset;
+                        targetY += yOffset;
+                        Square targetSquare = board.getSquare(square, targetX, targetY);
+                        if (targetSquare == null) {
+                            moveAdded = false;
+                        } else {
+                            moveAdded = createMove(board, this, targetSquare, moves);
+                        }
+                    } while (moveAdded);
+                }
+            }
+        }
+        legalMoves = moves;
+        return legalMoves;
+    }
+
+    protected boolean createMove(Board board, Piece piece, Square targetSquare, Set<BoardMove> moves) {
+        return MoveHelper.createMove(board, this, targetSquare, moves, false);
     }
 
     public String getName() {
         return getPieceEnum().getNameJPShort();
     }
 
-    // A helper method that creates a move from the piece to another square based on the x and y offset from the originating piece.
-    // This only validates whether the destination square exists, and is not occupied by a friendly piece.
-    // The calling method should ensure that the move is valid for the piece
-    protected boolean createMove(Board board, int xOffset, int yOffset, Set<Move> moves, boolean isSente, boolean allowPromotion) {
-        Square targetSquare = board.getSquare(xOffset, yOffset);
-        if (targetSquare != null && (targetSquare.getPiece() == null || targetSquare.getPiece().isSente() != isSente)) {
-            int y = targetSquare.getY();
-            switch(this.getPieceEnum()) {
-                case KEI:
-                    if (isSente? y <= 1 : y >= 7) {
-                        break;
-                    }
-                case FU, KYOU:
-                    if (isSente? y == 0 : y == 8) {
-                        break;
-                    }
-                default:
-                    moves.add(new Move(this, targetSquare));
-            }
-            if (targetSquare.isPromotionZone(isSente) && allowPromotion) {
-                moves.add(new Move(this, targetSquare, true));
-            }
-            return (targetSquare.getPiece() == null);
-        }
-        return false;
-    }
-
-    // Gold moves are so common, we give it its own helper method
-    protected Set<Move> getGoldMoves(Board board) {
-        // moves like
-        //  O  O  O    .  O  .
-        //  O  ☗  O    O  ⛊  O
-        //  .  O  .    O  O  O
-        HashSet<Move> moves = new HashSet<>();
-        int x = getSquare().getX();
-        int y = getSquare().getY();
-        Square s;
-
-        createMove(board, x + 1, y, moves, isSente, false);
-        createMove(board, x - 1, y, moves, isSente, false);
-        createMove(board, x, y + 1, moves, isSente, false);
-        createMove(board, x, y - 1, moves, isSente, false);
-
-        y = isSente ? y - 1 : y + 1;
-
-        createMove(board, x + 1, y, moves, isSente, false);
-        createMove(board, x - 1, y, moves, isSente, false);
-
-        return moves;
-    }
-
-    public abstract PieceEnum getPieceEnum();
-
-    public abstract Set<Move> updateLegalMoves(Board board);
-
     @Override
     public String toString() {
         return getName();
     }
-
 }
