@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 public class BoardMove extends Move {
 
+    private final Square originSquare;
     private final Piece piece;
     private final Piece capturedPiece;
     private final boolean isPromotion;
@@ -19,6 +20,7 @@ public class BoardMove extends Move {
     public BoardMove(Piece piece, Square targetSquare, boolean isPromotion) {
         super(targetSquare, piece.isSente());
         this.piece = piece;
+        this.originSquare = piece.getSquare();
         this.isPromotion = isPromotion;
         if (targetSquare.getPiece() != null) {
             isCapture = true;
@@ -33,6 +35,10 @@ public class BoardMove extends Move {
 
     public BoardMove(Piece piece, Square targetSquare) {
         this(piece, targetSquare, false);
+    }
+
+    private Square getOriginSquare() {
+        return originSquare;
     }
 
     public Piece getPiece() {
@@ -51,7 +57,7 @@ public class BoardMove extends Move {
         return isCapture;
     }
 
-    public boolean isCapturedPieceIsPromoted() {
+    private boolean isCapturedPieceIsPromoted() {
         return capturedPieceIsPromoted;
     }
 
@@ -72,12 +78,32 @@ public class BoardMove extends Move {
             getTargetSquare().setPiece(null);
             board.getPiecesInHand().add(capturedPiece);
         }
-        getPiece().getSquare().setPiece(null);
-        getPiece().setSquare(getTargetSquare());
+        getOriginSquare().setPiece(null);
         getTargetSquare().setPiece(getPiece());
+        getPiece().setSquare(getTargetSquare());
         if (isPromotion()) {
             getPiece().setPromoted(true);
         }
+    }
+
+    @Override
+    public void undoMove() {
+        Board board = getBoard();
+        if (isPromotion()) {
+            getPiece().setPromoted(false);
+        }
+        getTargetSquare().setPiece(null);
+        getOriginSquare().setPiece(getPiece());
+        getPiece().setSquare(getOriginSquare());
+        if (isCapture()) {
+            Piece capturedPiece = board.getPiecesInHand().take(getCapturedPiece().getPieceEnum(), isSente());
+            capturedPiece.setInHand(false);
+            capturedPiece.setSente(!isSente());
+            capturedPiece.setPromoted(isCapturedPieceIsPromoted());
+            capturedPiece.setSquare(targetSquare);
+            getTargetSquare().setPiece(capturedPiece);
+        }
+
     }
 
     @Override

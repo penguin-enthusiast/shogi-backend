@@ -54,6 +54,8 @@ public abstract class Move {
 
     public abstract void makeMove();
 
+    public abstract void undoMove();
+
     protected abstract String getDisambiguationJP();
 
     @Override

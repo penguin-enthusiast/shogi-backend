@@ -31,6 +31,17 @@ public class DropMove extends Move {
     }
 
     @Override
+    public void undoMove() {
+        Piece piece = targetSquare.getPiece();
+        piece.setInHand(true);
+        piece.setSquare(null);
+        piece.clearLegalMoves();
+        piece.setPromoted(false);
+        getTargetSquare().setPiece(null);
+        getBoard().getPiecesInHand().add(piece);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         DropMove move = (DropMove) o;

@@ -266,7 +266,7 @@ public class Board {
         legalMoves.addAll(getDropMoves(false));
     }
 
-    public boolean commitMove (Move move) {
+    public boolean commitMove(Move move) {
         if (move == null) {
             return false;
         }
@@ -278,6 +278,18 @@ public class Board {
             return true;
         }
         return false;
+    }
+
+    public boolean undoLastMove() {
+        if (movesPlayed.isEmpty()) {
+            return false;
+        }
+
+        Move lastMove = getLastMove().getLeft();
+        lastMove.undoMove();
+        movesPlayed.removeLast();
+        updateLegalMoves();
+        return true;
     }
 
     public String printBoardInt() {
