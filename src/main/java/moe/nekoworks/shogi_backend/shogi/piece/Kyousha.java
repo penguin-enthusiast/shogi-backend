@@ -31,7 +31,8 @@ public class Kyousha extends PromotablePiece {
         //
         // moves like a gold when promoted
         if (isPromoted) {
-            return getGoldMoves(board);
+            legalMoves = getGoldMoves(board);
+            return legalMoves;
         }
         HashSet<Move> moves = new HashSet<Move>();
         boolean isSente = isSente();
@@ -42,10 +43,11 @@ public class Kyousha extends PromotablePiece {
         int destY = y;
         do {
             destY = isSente() ? destY - 1 : destY + 1;
-            moveAdded = createMove(board, x, y, moves, isSente, true);
+            moveAdded = createMove(board, x, destY, moves, isSente, true);
         } while (moveAdded);
 
-        return moves;
+        legalMoves = moves;
+        return legalMoves;
     }
 
     @Override

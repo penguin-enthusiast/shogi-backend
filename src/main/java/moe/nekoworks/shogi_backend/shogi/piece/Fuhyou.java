@@ -31,14 +31,16 @@ public class Fuhyou extends PromotablePiece {
         //
         // moves like a gold when promoted
         if (isPromoted) {
-            return getGoldMoves(board);
+            legalMoves = getGoldMoves(board);
+            return legalMoves;
         }
         HashSet<Move> moves = new HashSet<Move>();
         int x = getSquare().getX();
         int y = getSquare().getY() + (isSente() ? -1 : 1);
         createMove(board, x, y, moves, isSente(), true);
 
-        return moves;
+        legalMoves = moves;
+        return legalMoves;
     }
 
     @Override

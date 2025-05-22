@@ -30,7 +30,8 @@ public abstract class King extends Piece {
         createMove(board, x + 1, y - 1, moves, isSente(), false);
         createMove(board, x - 1, y - 1, moves, isSente(), false);
 
-        return moves;
+        legalMoves = moves;
+        return legalMoves;
     }
 
     @Override

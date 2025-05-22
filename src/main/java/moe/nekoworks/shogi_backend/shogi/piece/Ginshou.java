@@ -31,7 +31,8 @@ public class Ginshou extends PromotablePiece {
         //
         // moves like a gold when promoted
         if (isPromoted) {
-            return getGoldMoves(board);
+            legalMoves = getGoldMoves(board);
+            return legalMoves;
         }
         HashSet<Move> moves = new HashSet<Move>();
         int x = getSquare().getX();
@@ -44,7 +45,8 @@ public class Ginshou extends PromotablePiece {
         y = isSente() ? y - 1 : y + 1;
         createMove(board, x, y, moves, isSente(), true);
 
-        return moves;
+        legalMoves = moves;
+        return legalMoves;
     }
 
     @Override

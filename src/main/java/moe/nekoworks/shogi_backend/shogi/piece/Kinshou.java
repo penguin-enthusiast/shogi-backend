@@ -20,7 +20,8 @@ public class Kinshou extends Piece {
 
     @Override
     public Set<Move> updateLegalMoves(Board board) {
-        return getGoldMoves(board);
+        legalMoves = getGoldMoves(board);
+        return legalMoves;
     }
 
 }

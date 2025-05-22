@@ -72,24 +72,25 @@ public abstract class Piece {
     // This only validates whether the destination square exists, and is not occupied by a friendly piece.
     // The calling method should ensure that the move is valid for the piece
     protected boolean createMove(Board board, int xOffset, int yOffset, Set<Move> moves, boolean isSente, boolean allowPromotion) {
-        Square s = board.getSquare(xOffset, yOffset);
-        if (s != null && (s.getPiece() == null || s.getPiece().isSente() != isSente)) {
-            switch(s.getPiece().getPieceEnum()) {
-                case FU, KYOU:
-                    if (isSente? s.getY() == 0 : s.getY() == 8) {
+        Square targetSquare = board.getSquare(xOffset, yOffset);
+        if (targetSquare != null && (targetSquare.getPiece() == null || targetSquare.getPiece().isSente() != isSente)) {
+            int y = targetSquare.getY();
+            switch(this.getPieceEnum()) {
+                case KEI:
+                    if (isSente? y <= 1 : y >= 7) {
                         break;
                     }
-                case KEI:
-                    if (isSente? s.getY() <= 1 : s.getY() >= 7) {
+                case FU, KYOU:
+                    if (isSente? y == 0 : y == 8) {
                         break;
                     }
                 default:
-                    moves.add(new Move(this, s));
+                    moves.add(new Move(this, targetSquare));
             }
-            if (s.isPromotionZone(isSente) && allowPromotion) {
-                moves.add(new Move(this, s, true));
+            if (targetSquare.isPromotionZone(isSente) && allowPromotion) {
+                moves.add(new Move(this, targetSquare, true));
             }
-            return true;
+            return (targetSquare.getPiece() == null);
         }
         return false;
     }
@@ -121,4 +122,10 @@ public abstract class Piece {
     public abstract PieceEnum getPieceEnum();
 
     public abstract Set<Move> updateLegalMoves(Board board);
+
+    @Override
+    public String toString() {
+        return getName();
+    }
+
 }

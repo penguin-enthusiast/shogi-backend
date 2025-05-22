@@ -4,24 +4,23 @@ import moe.nekoworks.shogi_backend.shogi.piece.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Board {
 
     public static final String INITIAL_STATE_MSFEN = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL - 1";
 
-    private static final Logger log = LoggerFactory.getLogger(Board.class);
     private int move;
 
-    private Square[][] board;
+    final Square[][] board;
+    private final Set<Piece> pieces;
 
     public Board() {
-        initBoard();
+        this(INITIAL_STATE_MSFEN);
     }
 
-    public void initBoard() {
-        initBoard(INITIAL_STATE_MSFEN);
-    }
-
-    public void initBoard(String msfen) {
+    public Board (String msfen) {
         // here we use a modified version of the SFEN notation to set a board.
         // each piece is followed by a floating point number <1 starting with a '.'
         // representing the 'cooldown'. a '.' by itself or no '.' represents a 0 value.
@@ -44,6 +43,7 @@ public class Board {
         int file = 0;
 
         // pieces
+        pieces = new HashSet<>();
         boolean isPromoted = false;
         for (int i = 0; i < fen[0].length(); i++) {
             Piece p = null;
@@ -108,8 +108,9 @@ public class Board {
                     break;
             }
             if (p != null) {
+                pieces.add(p);
             }
-            if (c != '/') {
+            if (c != '/' && c != '+') {
                 file++;
             }
         }
@@ -146,9 +147,68 @@ public class Board {
         return null;
     }
 
+    public Set<Piece> getPieces() {
+        return pieces;
+    }
+
+    public Set<Piece> getPiecesOnBoard() {
+        HashSet<Piece> pieces = new HashSet<>();
+        for (Piece p : this.pieces) {
+            if (!p.isInHand()) {
+                pieces.add(p);
+            }
+        }
+        return pieces;
+    }
+
+    public Set<Move> getAllLegalMoves() {
+        Set<Move> moves = getLegalMoves(true);
+        moves.addAll(getLegalMoves(false));
+        return moves;
+    }
+
+    public Set<Move> getLegalMoves(boolean isSente) {
+        Set<Move> moves = new HashSet<>();
+        for (Piece p : getPiecesOnBoard()) {
+            moves.addAll(p.getLegalMoves());
+        }
+        return moves;
+    }
+
+    public Set<Move> updateMoves () {
+        Set<Move> moves = new HashSet<>();
+        for (Piece p : getPiecesOnBoard()) {
+            p.updateLegalMoves(this);
+            moves.addAll(p.getLegalMoves());
+        }
+        return moves;
+    }
+
     @Override
     public String toString() {
         return printBoardJP();
+    }
+
+    // test method to visualize a piece's move. remove in the future
+    public void printAttackingSquares(Piece p) {
+        System.out.println(p + " - " + p.getSquare());
+        Set<Move> moves = p.updateLegalMoves(this);
+        HashSet<Square> squares = new HashSet<>();
+        for(Move m : moves) {
+            squares.add(m.getTargetSquare());
+        }
+
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (squares.contains(board[i][j])) {
+                    System.out.print(" x ");
+                }
+                else {
+                    System.out.print(" . ");
+                }
+            }
+            System.out.println();
+        }
     }
 
 }

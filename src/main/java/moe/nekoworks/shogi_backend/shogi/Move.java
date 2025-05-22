@@ -49,4 +49,21 @@ public class Move {
         return piece.getSquare();
     }
 
+    public String notationJP () {
+        StringBuilder sb = new StringBuilder(6);
+        sb.append(piece.isSente() ? '☗' : '☖');
+        sb.append(targetSquare.getSquareNameJp());
+        sb.append(piece.getPieceEnum().getNameJPShort());
+        if (isPromotion) {
+            sb.append('成');
+        }
+
+        return sb.toString();
+    }
+
+    @Override
+    public String toString () {
+        return notationJP();
+    }
+
 }

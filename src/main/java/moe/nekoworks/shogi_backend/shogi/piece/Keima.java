@@ -31,16 +31,18 @@ public class Keima extends PromotablePiece {
         //
         // moves like a gold when promoted
         if (isPromoted) {
-            return getGoldMoves(board);
+            legalMoves = getGoldMoves(board);
+            return legalMoves;
         }
         HashSet<Move> moves = new HashSet<Move>();
         int x = getSquare().getX();
         int y = getSquare().getY();
         y = isSente() ? y - 2 : y + 2;
         createMove(board, x + 1, y, moves, isSente(), true);
-        createMove(board, x + 2, y, moves, isSente(), true);
+        createMove(board, x - 1, y, moves, isSente(), true);
 
-        return moves;
+        legalMoves = moves;
+        return legalMoves;
     }
 
     @Override

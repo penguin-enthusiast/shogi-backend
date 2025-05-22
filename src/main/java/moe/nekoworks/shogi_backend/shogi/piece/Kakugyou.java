@@ -33,9 +33,6 @@ public class Kakugyou extends PromotablePiece {
         //  ↖  O  ↗    ↖  O  ↗
         //  O  ☗  O    O  ⛊  O
         //  ↙  O  ↘    ↙  O  ↘
-        if (isPromoted) {
-            return getGoldMoves(board);
-        }
         HashSet<Move> moves = new HashSet<Move>();
         boolean isSente = isSente();
         int x = getSquare().getX();
@@ -79,7 +76,8 @@ public class Kakugyou extends PromotablePiece {
             createMove(board, x, y - 1, moves, isSente, false);
         }
 
-        return moves;
+        legalMoves = moves;
+        return legalMoves;
     }
 
     @Override
