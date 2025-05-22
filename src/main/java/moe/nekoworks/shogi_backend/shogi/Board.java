@@ -315,19 +315,25 @@ public class Board {
         return false;
     }
 
-    public String printBoardJP() {
-        final String row = "-------------------------------------------------------\n";
+    public String printBoardInt() {
+        final String topRow = "┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐\n";
+        final String midRow = "├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤\n";
+        final String botRow = "└─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘\n";
         StringBuilder printedBoard = new StringBuilder();
         int[][] piecesInHand = getPiecesInHand().getPieces();
         printPiecesInHand(piecesInHand[1], printedBoard);
         for (int i = 0; i < 9; i++) {
-            printedBoard.append(row);
-            printedBoard.append('|');
+            if (i == 0) {
+                printedBoard.append(topRow);
+            } else {
+                printedBoard.append(midRow);
+            }
+            printedBoard.append('│');
             for (int j = 0; j < 9; j++) {
                 printedBoard.append(' ');
                 Piece p = board[i][j].getPiece();
                 if (p == null) {
-                    printedBoard.append(" . ");
+                    printedBoard.append("   ");
                 } else {
                     if (!p.isPromoted()) {
                         printedBoard.append(" ");
@@ -336,11 +342,11 @@ public class Board {
                     printedBoard.append(p.isSente() ? '^' : 'v');
                 }
                 printedBoard.append(' ');
-                printedBoard.append('|');
+                printedBoard.append('│');
             }
             printedBoard.append('\n');
         }
-        printedBoard.append(row);
+        printedBoard.append(botRow);
         printPiecesInHand(piecesInHand[0], printedBoard);
         return printedBoard.toString();
     }
@@ -359,7 +365,7 @@ public class Board {
 
     @Override
     public String toString() {
-        return printBoardJP();
+        return printBoardInt();
     }
 
     // test method to visualize a piece's move. remove in the future
