@@ -9,10 +9,12 @@ public class Square {
 
     private final int x;
     private final int y;
+    private final Board board;
 
     private Piece piece = null;
 
-    public Square(int x, int y) {
+    public Square(Board board, int x, int y) {
+        this.board = board;
         this.x = x;
         this.y = y;
     }
@@ -23,6 +25,10 @@ public class Square {
 
     public int getY() {
         return y;
+    }
+
+    public Board getBoard() {
+        return board;
     }
 
     public Piece getPiece() {

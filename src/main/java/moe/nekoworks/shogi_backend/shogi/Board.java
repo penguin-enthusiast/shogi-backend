@@ -34,7 +34,7 @@ public class Board {
         board = new Square[9][9];
         for (int y = 8; y >= 0; y--) {
             for (int x = 0; x < 9; x++) {
-                board[y][x] = new Square(x, y);
+                board[y][x] = new Square(this, x, y);
             }
         }
 
