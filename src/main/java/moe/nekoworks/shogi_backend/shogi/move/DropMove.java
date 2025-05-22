@@ -1,9 +1,12 @@
 package moe.nekoworks.shogi_backend.shogi.move;
 
 import moe.nekoworks.shogi_backend.shogi.Square;
+import moe.nekoworks.shogi_backend.shogi.piece.Piece;
 import moe.nekoworks.shogi_backend.shogi.piece.PieceEnum;
 
-import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DropMove extends Move {
 
@@ -14,6 +17,10 @@ public class DropMove extends Move {
         super(targetSquare);
         this.isSente = isSente;
         this.piece = piece;
+    }
+
+    public boolean isSente() {
+        return isSente;
     }
 
     @Override
@@ -28,14 +35,23 @@ public class DropMove extends Move {
         return piece == move.piece && getTargetSquare() == move.getTargetSquare();
     }
 
-
     @Override
-    public String notationJP () {
-        StringBuilder sb = new StringBuilder(6);
-        sb.append(isSente ? '☗' : '☖');
-        sb.append(targetSquare.getSquareNameJp());
-        sb.append(piece.getNameJPShort());
+    protected String getDisambiguationJP () {
 
-        return sb.toString();
+        // Find all other pieces of the same type to disambiguate.
+        Set<Piece> piecesOfSameType = getBoard().getPiecesOnBoard().stream()
+                .filter(p -> p.getPieceEnum() == piece && p.isSente() == isSente).collect(Collectors.toSet());
+        piecesOfSameType.removeIf(p -> p.getLegalMoves().isEmpty());
+
+        if (!piecesOfSameType.isEmpty()) {
+            Set<Square> targetSquares = new HashSet<>();
+            for (Piece p : piecesOfSameType) {
+                targetSquares.addAll(p.getLegalMoves().stream().map(m -> m.targetSquare).toList());
+            }
+            if (targetSquares.contains(targetSquare)) {
+                return "打";
+            }
+        }
+        return "";
     }
 }

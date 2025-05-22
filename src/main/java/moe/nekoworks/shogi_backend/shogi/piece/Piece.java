@@ -3,6 +3,7 @@ package moe.nekoworks.shogi_backend.shogi.piece;
 import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
 import moe.nekoworks.shogi_backend.shogi.Square;
+import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import moe.nekoworks.shogi_backend.shogi.move.MoveHelper;
 import moe.nekoworks.shogi_backend.shogi.move.MovementClass;
 import org.apache.commons.lang3.tuple.Pair;
@@ -42,12 +43,17 @@ public abstract class Piece {
         return isSente;
     }
 
-    public void setSente(boolean sente) {
-        isSente = sente;
-    }
-
     public boolean isInHand() {
         return inHand;
+    }
+
+    public Square getSquare() {
+        return square;
+    }
+
+    // should only ever be called by the move() method
+    public void setSquare(Square square) {
+        this.square = square;
     }
 
     public void putInHand() {
@@ -60,32 +66,28 @@ public abstract class Piece {
         legalMoves.clear();
     }
 
-    public Square getSquare() {
-        return square;
+    public void move(BoardMove move) {
+        square.setPiece(null);
+        square = move.getTargetSquare();
+        move.getTargetSquare().setPiece(this);
     }
 
-    // should only ever be called by the move() method
-    public void setSquare(Square square) {
-        this.square = square;
+    public void drop(DropMove move) {
+        this.square = move.getTargetSquare();
+        square.setPiece(this);
+        inHand = false;
     }
 
     public Set<BoardMove> getLegalMoves () {
         return legalMoves;
     }
 
-    public boolean inPromotionZone() {
-        if (square == null) {
-            return false;
-        }
-        return square.isPromotionZone(isSente);
-    }
-
     public abstract PieceEnum getPieceEnum();
 
-    public Set<BoardMove> updateLegalMoves (Board board) {
+    public void updateLegalMoves (Board board) {
         Set<BoardMove> moves = new HashSet<>();
         if (inHand) {
-            return moves;
+            return;
         }
         MovementClass movementClass = getPieceEnum().getMovementClass();
         byte[][] movementMap = movementClass.getMovementMap(isSente);
@@ -117,19 +119,26 @@ public abstract class Piece {
             }
         }
         legalMoves = moves;
-        return legalMoves;
     }
 
     protected boolean createMove(Board board, Piece piece, Square targetSquare, Set<BoardMove> moves) {
-        return MoveHelper.createMove(board, this, targetSquare, moves, false);
+        return MoveHelper.createMove(this, targetSquare, moves, false);
     }
 
-    public String getName() {
+    public boolean isPromoted() {
+        return false;
+    }
+
+    public String getNameJPShort() {
         return getPieceEnum().getNameJPShort();
+    }
+
+    public String getSymbol() {
+        return getPieceEnum().getSymbol();
     }
 
     @Override
     public String toString() {
-        return getName();
+        return getSymbol();
     }
 }

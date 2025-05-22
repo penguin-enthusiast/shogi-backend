@@ -80,21 +80,17 @@ public enum MovementClass {
 
     private final byte[][] movementMapSente;
     private final byte[][] movementMapGote;
-    // if the map is vertically symmetrical
-    private final boolean symmetrical;
 
 
 
     MovementClass (byte[][] movementMapSente, byte[][] movementMapGote) {
         this.movementMapSente = movementMapSente;
         this.movementMapGote = movementMapGote;
-        this.symmetrical = false;
     }
 
     MovementClass (byte[][] movementMapSente) {
         this.movementMapSente = movementMapSente;
         this.movementMapGote = movementMapSente;
-        this.symmetrical = true;
     }
 
     public byte[][] getMovementMap (boolean isSente) {

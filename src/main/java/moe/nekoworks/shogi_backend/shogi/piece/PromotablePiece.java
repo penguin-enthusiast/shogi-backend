@@ -31,16 +31,27 @@ public abstract class PromotablePiece extends Piece{
     }
 
     @Override
+    public void move(BoardMove move) {
+        super.move(move);
+        if (move.isPromotion()) {
+            promote();
+        }
+    }
+
+    @Override
     protected boolean createMove(Board board, Piece piece, Square targetSquare, Set<BoardMove> moves) {
         boolean allowPromotion = !isPromoted &&
                 (targetSquare.isPromotionZone(isSente()) || piece.getSquare().isPromotionZone(isSente()));
-        return MoveHelper.createMove(board, this, targetSquare, moves, allowPromotion);
+        return MoveHelper.createMove(this, targetSquare, moves, allowPromotion);
     }
 
+    @Override
     public boolean isPromoted() {
         return isPromoted;
     }
 
-    public abstract void promote();
+    public void promote() {
+        isPromoted = true;
+    }
 
 }

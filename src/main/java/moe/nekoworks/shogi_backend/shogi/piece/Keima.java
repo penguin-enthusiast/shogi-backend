@@ -8,10 +8,6 @@ public class Keima extends PromotablePiece {
         super(isSente);
     }
 
-    public Keima(Square square, boolean isSente) {
-        super(square, isSente);
-    }
-
     public Keima(Square square, boolean isSente, boolean isPromoted) {
         super(square, isSente, isPromoted);
     }
@@ -19,11 +15,6 @@ public class Keima extends PromotablePiece {
     @Override
     public PieceEnum getPieceEnum() {
         return isPromoted ? PieceEnum.PKEI : PieceEnum.KEI;
-    }
-
-    @Override
-    public void promote() {
-        isPromoted = true;
     }
 
 }

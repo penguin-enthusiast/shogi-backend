@@ -2,9 +2,6 @@ package moe.nekoworks.shogi_backend.shogi;
 
 import moe.nekoworks.shogi_backend.shogi.piece.Piece;
 
-import java.awt.geom.PathIterator;
-import java.io.IOException;
-
 public class Square {
 
     private final int x;
@@ -49,7 +46,7 @@ public class Square {
         return String.valueOf(file) + rank;
     }
 
-    public String getSquareNameJp() {
+    public String getSquareNameJP() {
         char file = (char) ('9' - x);
         char rank = switch (y) {
             case 0 -> '一';
@@ -63,12 +60,11 @@ public class Square {
             case 8 -> '九';
             default -> ' ';
         };
-        ;
         return String.valueOf(file) + rank;
     }
 
     @Override
     public String toString () {
-        return getSquareNameJp();
+        return getSquareNameJP();
     }
 }

@@ -8,10 +8,6 @@ public class Kakugyou extends PromotablePiece {
         super(isSente);
     }
 
-    public Kakugyou(Square square, boolean isSente) {
-        super(square, isSente);
-    }
-
     public Kakugyou(Square square, boolean isSente, boolean isPromoted) {
         super(square, isSente, isPromoted);
     }
@@ -19,11 +15,6 @@ public class Kakugyou extends PromotablePiece {
     @Override
     public PieceEnum getPieceEnum() {
         return isPromoted ? PieceEnum.UMA : PieceEnum.KAKU;
-    }
-
-    @Override
-    public void promote() {
-        isPromoted = true;
     }
 
 }

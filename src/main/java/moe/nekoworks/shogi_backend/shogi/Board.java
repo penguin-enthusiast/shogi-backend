@@ -10,7 +10,7 @@ import java.util.*;
 
 public class Board {
 
-    public static final String INITIAL_STATE_MSFEN = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL - 1";
+    public static final String INITIAL_STATE_MSFEN = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL - - 1";
 
     private static final char[] PIECE_NAMES_JP = {'歩', '香', '桂', '銀', '金', '角', '飛'};
 
@@ -40,7 +40,7 @@ public class Board {
 
         // parse msfen
         String[] fen = msfen.split(" ");
-        if (fen.length != 4) {
+        if (fen.length != 4 && fen.length != 3) {
             throw new IllegalArgumentException();
         }
 
@@ -229,11 +229,9 @@ public class Board {
     }
 
     public Set<DropMove> getDropMoves(boolean isSente) {
-        System.out.println("DEBUG Board.getDropMoves");
         Set<PieceEnum> pieces = piecesInHand.possibleDrops(isSente);
         Set<DropMove> moves = new HashSet<>();
         for (PieceEnum p : pieces) {
-            System.out.println("getting drops - " + (isSente ? "sente " : "gote ") + " - " + p.getNameJPShort());
             moves.addAll(MoveHelper.createDropMoves(this, p, isSente));
         }
         return moves;
@@ -258,10 +256,15 @@ public class Board {
         if (move == null) {
             return false;
         }
+        boolean moveSuccess = false;
         if (BoardMove.class == move.getClass()) {
-            return commitMove((BoardMove) move);
+            moveSuccess = commitMove((BoardMove) move);
         } else if (DropMove.class == move.getClass()) {
-            return commitMove((DropMove) move);
+            moveSuccess = commitMove((DropMove) move);
+        }
+        if (moveSuccess){
+            updateMoves();
+            return true;
         }
         return false;
     }
@@ -276,19 +279,22 @@ public class Board {
         if (moves.contains(move)) {
             // make the move;
             if (targetPiece != null) {
-                piecesInHand.add(targetPiece);
                 targetPiece.putInHand();
+                piecesInHand.add(targetPiece);
             }
-            piece.setSquare(move.getTargetSquare());
-            move.getTargetSquare().setPiece(piece);
+            piece.move(move);
         } else {
             return false;
         }
-        updateMoves();
         return true;
     }
 
     public boolean commitMove(DropMove move) {
+        if (moves.contains(move)) {
+            Piece p = piecesInHand.take(move.getPieceType(), move.isSente());
+            p.drop(move);
+            return true;
+        }
         return false;
     }
 
@@ -306,8 +312,11 @@ public class Board {
                 if (p == null) {
                     printedBoard.append(" . ");
                 } else {
+                    if (!p.isPromoted()) {
+                        printedBoard.append(" ");
+                    }
+                    printedBoard.append(board[i][j].getPiece().toString());
                     printedBoard.append(p.isSente() ? '^' : 'v');
-                    printedBoard.append(board[i][j].getPiece().getName());
                 }
                 printedBoard.append(' ');
                 printedBoard.append('|');

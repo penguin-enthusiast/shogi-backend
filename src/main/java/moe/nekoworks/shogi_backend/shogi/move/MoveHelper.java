@@ -4,6 +4,7 @@ import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.Square;
 import moe.nekoworks.shogi_backend.shogi.piece.Piece;
 import moe.nekoworks.shogi_backend.shogi.piece.PieceEnum;
+import moe.nekoworks.shogi_backend.shogi.piece.PromotablePiece;
 
 import java.util.BitSet;
 import java.util.HashSet;
@@ -14,7 +15,7 @@ public class MoveHelper {
     // A helper method that creates a move from the piece to another square based on the x and y offset from the originating piece.
     // This only validates whether the destination square exists, and is not occupied by a friendly piece.
     // The calling method should ensure that the move is valid for the piece
-    public static boolean createMove(Board board, Piece piece, Square targetSquare, Set<BoardMove> moves, boolean allowPromotion) {
+    public static boolean createMove(Piece piece, Square targetSquare, Set<BoardMove> moves, boolean allowPromotion) {
         boolean isSente = piece.isSente();
         if (targetSquare.getPiece() == null || targetSquare.getPiece().isSente() != isSente) {
             int y = targetSquare.getY();
@@ -30,12 +31,19 @@ public class MoveHelper {
                 default:
                     moves.add(new BoardMove(piece, targetSquare));
             }
-            if ((targetSquare.isPromotionZone(isSente) || piece.inPromotionZone()) && allowPromotion) {
+            if (isPromoteable(piece, targetSquare) && allowPromotion) {
                 moves.add(new BoardMove(piece, targetSquare, true));
             }
             return (targetSquare.getPiece() == null);
         }
         return false;
+    }
+
+    public static boolean isPromoteable(Piece piece, Square targetSquare) {
+        if (!(piece instanceof PromotablePiece)) {
+            return false;
+        }
+        return !piece.isPromoted() && (targetSquare.isPromotionZone(piece.isSente()) || piece.getSquare().isPromotionZone(piece.isSente()));
     }
 
     public static Set<DropMove> createDropMoves(Board board, PieceEnum piece, boolean isSente) {

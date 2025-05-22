@@ -8,10 +8,6 @@ public class Hisha extends PromotablePiece {
         super(isSente);
     }
 
-    public Hisha(Square square, boolean isSente) {
-        super(square, isSente);
-    }
-
     public Hisha(Square square, boolean isSente, boolean isPromoted) {
         super(square, isSente, isPromoted);
     }
@@ -19,11 +15,6 @@ public class Hisha extends PromotablePiece {
     @Override
     public PieceEnum getPieceEnum() {
         return isPromoted ? PieceEnum.RYUU : PieceEnum.HI;
-    }
-
-    @Override
-    public void promote() {
-        isPromoted = true;
     }
 
 }
