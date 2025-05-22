@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+src/main/java/moe/nekoworks/shogi_backend/TestClass.java
