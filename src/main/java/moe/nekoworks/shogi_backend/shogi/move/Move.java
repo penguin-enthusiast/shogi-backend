@@ -35,6 +35,12 @@ public abstract class Move {
     }
 
     private String getTargetSquareName(Square square) {
+        if (getBoard().getLastMove() != null) {
+            Square prevSquare = getBoard().getLastMove().getLeft().targetSquare;
+            if (square == prevSquare) {
+                return "同　";
+            }
+        }
         return targetSquare.getSquareNameJP();
     }
 

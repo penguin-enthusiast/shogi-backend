@@ -5,6 +5,8 @@ import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import moe.nekoworks.shogi_backend.shogi.move.Move;
 import moe.nekoworks.shogi_backend.shogi.move.MoveHelper;
 import moe.nekoworks.shogi_backend.shogi.piece.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
@@ -17,7 +19,8 @@ public class Board {
     private final Square[][] board;
     private final Set<Piece> pieces;
     private final PiecesInHand piecesInHand = new PiecesInHand();
-    private final Set<Move> moves = new HashSet<>();
+    private final LinkedList<Pair<Move, String>> movesPlayed = new LinkedList<>();
+    private final Set<Move> legalMoves = new HashSet<>();
 
     public Board() {
         this(INITIAL_STATE_MSFEN);
@@ -185,7 +188,7 @@ public class Board {
             }
         }
 
-        updateMoves();
+        updateLegalMoves();
     }
 
     public Square getSquare(int x, int y) {
@@ -237,19 +240,30 @@ public class Board {
         return moves;
     }
 
-    public Set<Move> moves() {
-        return moves;
+    public LinkedList<Pair<Move, String>> getMovesPlayed() {
+        return new LinkedList<>(movesPlayed);
     }
 
-    private void updateMoves () {
+    public Pair<Move, String> getLastMove() {
+        if (movesPlayed.isEmpty()) {
+            return null;
+        }
+        return movesPlayed.getLast();
+    }
+
+    public Set<Move> getLegalMoves() {
+        return Collections.unmodifiableSet(legalMoves);
+    }
+
+    private void updateLegalMoves() {
         for (Piece p : getPiecesOnBoard()) {
             p.updateLegalMoves(this);
         }
-        moves.clear();
-        moves.addAll(getBoardMoves(true));
-        moves.addAll(getBoardMoves(false));
-        moves.addAll(getDropMoves(true));
-        moves.addAll(getDropMoves(false));
+        legalMoves.clear();
+        legalMoves.addAll(getBoardMoves(true));
+        legalMoves.addAll(getBoardMoves(false));
+        legalMoves.addAll(getDropMoves(true));
+        legalMoves.addAll(getDropMoves(false));
     }
 
     public boolean commitMove (Move move) {
@@ -257,13 +271,14 @@ public class Board {
             return false;
         }
         boolean moveSuccess = false;
+
         if (BoardMove.class == move.getClass()) {
             moveSuccess = commitMove((BoardMove) move);
         } else if (DropMove.class == move.getClass()) {
             moveSuccess = commitMove((DropMove) move);
         }
         if (moveSuccess){
-            updateMoves();
+            updateLegalMoves();
             return true;
         }
         return false;
@@ -278,6 +293,7 @@ public class Board {
         Piece targetPiece = move.getTargetSquare().getPiece();
         if (moves.contains(move)) {
             // make the move;
+            movesPlayed.add(new ImmutablePair<>(move, move.toString()));
             if (targetPiece != null) {
                 targetPiece.putInHand();
                 piecesInHand.add(targetPiece);
@@ -290,7 +306,8 @@ public class Board {
     }
 
     public boolean commitMove(DropMove move) {
-        if (moves.contains(move)) {
+        if (legalMoves.contains(move)) {
+            movesPlayed.add(new ImmutablePair<>(move, move.toString()));
             Piece p = piecesInHand.take(move.getPieceType(), move.isSente());
             p.drop(move);
             return true;
