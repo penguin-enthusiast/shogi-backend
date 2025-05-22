@@ -9,6 +9,10 @@ import java.util.Set;
 
 public class Hisha extends PromotablePiece {
 
+    public Hisha(boolean isSente) {
+        super(isSente);
+    }
+
     public Hisha(Square square, boolean isSente) {
         super(square, isSente);
     }

@@ -9,6 +9,10 @@ import java.util.Set;
 
 public class Ginshou extends PromotablePiece {
 
+    public Ginshou(boolean isSente) {
+        super(isSente);
+    }
+
     public Ginshou(Square square, boolean isSente) {
         super(square, isSente);
     }

@@ -9,6 +9,10 @@ import java.util.Set;
 
 public class Kinshou extends Piece {
 
+    public Kinshou(boolean isSente) {
+        super(isSente);
+    }
+
     public Kinshou(Square square, boolean isSente) {
         super(square, isSente);
     }

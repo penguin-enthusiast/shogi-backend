@@ -9,6 +9,10 @@ import java.util.Set;
 
 public class Kyousha extends PromotablePiece {
 
+    public Kyousha(boolean isSente) {
+        super(isSente);
+    }
+
     public Kyousha(Square square, boolean isSente) {
         super(square, isSente);
     }

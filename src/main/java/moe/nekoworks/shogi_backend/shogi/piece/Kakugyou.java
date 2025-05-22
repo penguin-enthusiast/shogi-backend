@@ -9,6 +9,10 @@ import java.util.Set;
 
 public class Kakugyou extends PromotablePiece {
 
+    public Kakugyou(boolean isSente) {
+        super(isSente);
+    }
+
     public Kakugyou(Square square, boolean isSente) {
         super(square, isSente);
     }

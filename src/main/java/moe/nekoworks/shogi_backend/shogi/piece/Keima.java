@@ -9,6 +9,10 @@ import java.util.Set;
 
 public class Keima extends PromotablePiece {
 
+    public Keima(boolean isSente) {
+        super(isSente);
+    }
+
     public Keima(Square square, boolean isSente) {
         super(square, isSente);
     }

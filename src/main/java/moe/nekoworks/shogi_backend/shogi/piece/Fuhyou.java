@@ -9,6 +9,11 @@ import java.util.Set;
 
 public class Fuhyou extends PromotablePiece {
 
+
+    public Fuhyou(boolean isSente) {
+        super(isSente);
+    }
+
     public Fuhyou(Square square, boolean isSente) {
         super(square, isSente);
     }

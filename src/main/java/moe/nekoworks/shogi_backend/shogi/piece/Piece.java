@@ -16,6 +16,12 @@ public abstract class Piece {
 
     protected Set<Move> legalMoves = new HashSet<>();
 
+    public Piece(boolean isSente) {
+        this.isSente = isSente;
+        this.square = null;
+        this.inHand = true;
+    }
+
     public Piece (Square square, boolean isSente) {
         this.square = square;
         this.isSente = isSente;
