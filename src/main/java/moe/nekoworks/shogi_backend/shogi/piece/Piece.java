@@ -3,11 +3,11 @@ package moe.nekoworks.shogi_backend.shogi.piece;
 import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
 import moe.nekoworks.shogi_backend.shogi.Square;
-import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import moe.nekoworks.shogi_backend.shogi.move.MoveHelper;
 import moe.nekoworks.shogi_backend.shogi.move.MovementClass;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -43,8 +43,16 @@ public abstract class Piece {
         return isSente;
     }
 
+    public void setSente(boolean sente) {
+        isSente = sente;
+    }
+
     public boolean isInHand() {
         return inHand;
+    }
+
+    public void setInHand(boolean inHand) {
+        this.inHand = inHand;
     }
 
     public Square getSquare() {
@@ -56,30 +64,8 @@ public abstract class Piece {
         this.square = square;
     }
 
-    public void putInHand() {
-        if(inHand) {
-            return;
-        }
-        inHand = true;
-        isSente = !isSente;
-        square = null;
-        legalMoves.clear();
-    }
-
-    public void move(BoardMove move) {
-        square.setPiece(null);
-        square = move.getTargetSquare();
-        move.getTargetSquare().setPiece(this);
-    }
-
-    public void drop(DropMove move) {
-        this.square = move.getTargetSquare();
-        square.setPiece(this);
-        inHand = false;
-    }
-
-    public Set<BoardMove> getLegalMoves () {
-        return legalMoves;
+    public Set<BoardMove> getLegalMoves() {
+        return Collections.unmodifiableSet(legalMoves);
     }
 
     public abstract PieceEnum getPieceEnum();
@@ -121,12 +107,19 @@ public abstract class Piece {
         legalMoves = moves;
     }
 
+    public void clearLegalMoves() {
+        legalMoves.clear();
+    }
+
     protected boolean createMove(Board board, Piece piece, Square targetSquare, Set<BoardMove> moves) {
         return MoveHelper.createMove(this, targetSquare, moves, false);
     }
 
     public boolean isPromoted() {
         return false;
+    }
+
+    public void setPromoted(boolean promoted) {
     }
 
     public String getNameJPShort() {

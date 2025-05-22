@@ -25,20 +25,6 @@ public abstract class PromotablePiece extends Piece{
     }
 
     @Override
-    public void putInHand() {
-        super.putInHand();
-        isPromoted = false;
-    }
-
-    @Override
-    public void move(BoardMove move) {
-        super.move(move);
-        if (move.isPromotion()) {
-            promote();
-        }
-    }
-
-    @Override
     protected boolean createMove(Board board, Piece piece, Square targetSquare, Set<BoardMove> moves) {
         boolean allowPromotion = !isPromoted &&
                 (targetSquare.isPromotionZone(isSente()) || piece.getSquare().isPromotionZone(isSente()));
@@ -50,8 +36,9 @@ public abstract class PromotablePiece extends Piece{
         return isPromoted;
     }
 
-    public void promote() {
-        isPromoted = true;
+    @Override
+    public void setPromoted(boolean promoted) {
+        isPromoted = promoted;
     }
 
 }

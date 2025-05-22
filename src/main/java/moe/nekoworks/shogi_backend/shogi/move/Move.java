@@ -9,13 +9,19 @@ import java.util.Objects;
 public abstract class Move {
 
     protected final Square targetSquare;
+    private final boolean isSente;
 
-    public Move(Square targetSquare) {
+    public Move(Square targetSquare, boolean isSente) {
         this.targetSquare = targetSquare;
+        this.isSente = isSente;
     }
 
     public Square getTargetSquare() {
         return targetSquare;
+    }
+
+    public boolean isSente() {
+        return isSente;
     }
 
     protected Board getBoard() {
@@ -44,9 +50,9 @@ public abstract class Move {
         return targetSquare.getSquareNameJP();
     }
 
-    public abstract boolean isSente();
-
     public abstract PieceEnum getPieceType();
+
+    public abstract void makeMove();
 
     protected abstract String getDisambiguationJP();
 

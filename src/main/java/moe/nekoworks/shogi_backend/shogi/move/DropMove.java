@@ -10,22 +10,24 @@ import java.util.stream.Collectors;
 
 public class DropMove extends Move {
 
-    private final boolean isSente;
     private final PieceEnum piece;
 
     public DropMove(Square targetSquare, PieceEnum piece, boolean isSente) {
-        super(targetSquare);
-        this.isSente = isSente;
+        super(targetSquare, isSente);
         this.piece = piece;
-    }
-
-    public boolean isSente() {
-        return isSente;
     }
 
     @Override
     public PieceEnum getPieceType() {
         return piece;
+    }
+
+    @Override
+    public void makeMove() {
+        Piece piece = getBoard().getPiecesInHand().take(getPieceType(), isSente());
+        piece.setSquare(getTargetSquare());
+        getTargetSquare().setPiece(piece);
+        piece.setInHand(false);
     }
 
     @Override
@@ -40,7 +42,7 @@ public class DropMove extends Move {
 
         // Find all other pieces of the same type to disambiguate.
         Set<Piece> piecesOfSameType = getBoard().getPiecesOnBoard().stream()
-                .filter(p -> p.getPieceEnum() == piece && p.isSente() == isSente).collect(Collectors.toSet());
+                .filter(p -> p.getPieceEnum() == piece && p.isSente() == isSente()).collect(Collectors.toSet());
         piecesOfSameType.removeIf(p -> p.getLegalMoves().isEmpty());
 
         if (!piecesOfSameType.isEmpty()) {

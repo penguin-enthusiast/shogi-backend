@@ -1,5 +1,6 @@
 package moe.nekoworks.shogi_backend.shogi.move;
 
+import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.Square;
 import moe.nekoworks.shogi_backend.shogi.piece.Piece;
 import moe.nekoworks.shogi_backend.shogi.piece.PieceEnum;
@@ -10,12 +11,24 @@ import java.util.stream.Collectors;
 public class BoardMove extends Move {
 
     private final Piece piece;
+    private final Piece capturedPiece;
     private final boolean isPromotion;
+    private final boolean isCapture;
+    private final boolean capturedPieceIsPromoted;
 
     public BoardMove(Piece piece, Square targetSquare, boolean isPromotion) {
-        super(targetSquare);
+        super(targetSquare, piece.isSente());
         this.piece = piece;
         this.isPromotion = isPromotion;
+        if (targetSquare.getPiece() != null) {
+            isCapture = true;
+            capturedPiece = targetSquare.getPiece();
+            capturedPieceIsPromoted = targetSquare.getPiece().isPromoted();
+        } else {
+            isCapture = false;
+            capturedPiece = null;
+            capturedPieceIsPromoted = false;
+        }
     }
 
     public BoardMove(Piece piece, Square targetSquare) {
@@ -26,17 +39,45 @@ public class BoardMove extends Move {
         return piece;
     }
 
+    public Piece getCapturedPiece() {
+        return capturedPiece;
+    }
+
     public boolean isPromotion() {
         return isPromotion;
     }
 
-    public boolean isSente() {
-        return piece.isSente();
+    public boolean isCapture() {
+        return isCapture;
+    }
+
+    public boolean isCapturedPieceIsPromoted() {
+        return capturedPieceIsPromoted;
     }
 
     @Override
     public PieceEnum getPieceType () {
         return piece.getPieceEnum();
+    }
+
+    @Override
+    public void makeMove() {
+        Board board = getBoard();
+        if (isCapture()) {
+            Piece capturedPiece = getCapturedPiece();
+            capturedPiece.setInHand(true);
+            capturedPiece.setSente(isSente());
+            capturedPiece.clearLegalMoves();
+            capturedPiece.setPromoted(false);
+            getTargetSquare().setPiece(null);
+            board.getPiecesInHand().add(capturedPiece);
+        }
+        getPiece().getSquare().setPiece(null);
+        getPiece().setSquare(getTargetSquare());
+        getTargetSquare().setPiece(getPiece());
+        if (isPromotion()) {
+            getPiece().setPromoted(true);
+        }
     }
 
     @Override

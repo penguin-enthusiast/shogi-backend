@@ -270,46 +270,11 @@ public class Board {
         if (move == null) {
             return false;
         }
-        boolean moveSuccess = false;
 
-        if (BoardMove.class == move.getClass()) {
-            moveSuccess = commitMove((BoardMove) move);
-        } else if (DropMove.class == move.getClass()) {
-            moveSuccess = commitMove((DropMove) move);
-        }
-        if (moveSuccess){
+        if(legalMoves.contains(move)) {
+            move.makeMove();
+            movesPlayed.add(new ImmutablePair<>(move, move.toString()));
             updateLegalMoves();
-            return true;
-        }
-        return false;
-    }
-
-    public boolean commitMove(BoardMove move) throws IllegalArgumentException {
-        if (move == null || move.getPiece() == null) {
-            throw new IllegalArgumentException();
-        }
-        final Piece piece = move.getPiece();
-        Set<BoardMove> moves = getBoardMoves(piece.isSente());
-        Piece targetPiece = move.getTargetSquare().getPiece();
-        if (moves.contains(move)) {
-            // make the move;
-            movesPlayed.add(new ImmutablePair<>(move, move.toString()));
-            if (targetPiece != null) {
-                targetPiece.putInHand();
-                piecesInHand.add(targetPiece);
-            }
-            piece.move(move);
-        } else {
-            return false;
-        }
-        return true;
-    }
-
-    public boolean commitMove(DropMove move) {
-        if (legalMoves.contains(move)) {
-            movesPlayed.add(new ImmutablePair<>(move, move.toString()));
-            Piece p = piecesInHand.take(move.getPieceType(), move.isSente());
-            p.drop(move);
             return true;
         }
         return false;
