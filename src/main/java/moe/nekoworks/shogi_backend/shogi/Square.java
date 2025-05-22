@@ -33,6 +33,10 @@ public class Square {
         this.piece = piece;
     }
 
+    public boolean isPromotionZone(boolean isSente) {
+        return isSente ? y < 3 : y > 5;
+    }
+
     public String getSquareNameInt() {
         char file = (char) ('9' - x);
         char rank = (char) ('a' + y);

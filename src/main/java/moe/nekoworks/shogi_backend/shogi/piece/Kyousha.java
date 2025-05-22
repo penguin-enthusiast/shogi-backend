@@ -4,14 +4,10 @@ import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.Move;
 import moe.nekoworks.shogi_backend.shogi.Square;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class Kyousha extends PromotablePiece {
-
-    public static final String NAME_INT_SHORT = "Kyou";
-    public static final String NAME_INT_LONG = "Kyousha";
-    public static final String NAME_JP_SHORT = "香";
-    public static final String NAME_JP_LONG = "香車";
 
     public Kyousha(Square square, boolean isSente) {
         super(square, isSente);
@@ -27,17 +23,33 @@ public class Kyousha extends PromotablePiece {
     }
 
     @Override
-    public Set<Move> legalMoves(Board board) {
-        return Set.of();
+    public Set<Move> updateLegalMoves(Board board) {
+        // moves when not promoted
+        //  .  ↑  .    .  .  .
+        //  .  ☗  .    .  ⛊  .
+        //  .  .  .    .  ↓  .
+        //
+        // moves like a gold when promoted
+        if (isPromoted) {
+            return getGoldMoves(board);
+        }
+        HashSet<Move> moves = new HashSet<Move>();
+        boolean isSente = isSente();
+        int x = getSquare().getX();
+        int y = getSquare().getY();
+
+        boolean moveAdded = false;
+        int destY = y;
+        do {
+            destY = isSente() ? destY - 1 : destY + 1;
+            moveAdded = createMove(board, x, y, moves, isSente, true);
+        } while (moveAdded);
+
+        return moves;
     }
 
     @Override
     public void promote() {
         isPromoted = true;
-    }
-
-    @Override
-    public String getName() {
-        return NAME_JP_SHORT;
     }
 }

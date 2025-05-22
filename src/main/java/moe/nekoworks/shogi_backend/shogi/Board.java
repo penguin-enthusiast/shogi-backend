@@ -139,14 +139,16 @@ public class Board {
         return printedBoard.toString();
     }
 
+    public Square getSquare(int x, int y) {
+        if (0 <= x && x <= 8 && 0 <= y && y <= 8) {
+            return board[y][x];
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return printBoardJP();
-    }
-
-    public static boolean inPromotionZone(boolean isSente, Square square) {
-        int rank = square.getY();
-        return isSente ? rank < 3 : rank > 5;
     }
 
 }

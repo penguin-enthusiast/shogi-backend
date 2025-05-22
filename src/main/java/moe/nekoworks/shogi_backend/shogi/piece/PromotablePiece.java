@@ -15,6 +15,12 @@ public abstract class PromotablePiece extends Piece{
         this.isPromoted = isPromoted;
     }
 
+    @Override
+    public void putInHand() {
+        super.putInHand();
+        isPromoted = false;
+    }
+
     public boolean isPromoted() {
         return isPromoted;
     }

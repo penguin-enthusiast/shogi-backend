@@ -6,7 +6,7 @@ import moe.nekoworks.shogi_backend.shogi.Square;
 
 import java.util.Set;
 
-public class Gyokushou extends Ou {
+public class Gyokushou extends King {
 
     public Gyokushou(Square square, boolean isSente) {
         super(square, isSente);
@@ -15,11 +15,6 @@ public class Gyokushou extends Ou {
     @Override
     public PieceEnum getPieceEnum() {
         return PieceEnum.GYOKU;
-    }
-
-    @Override
-    public Set<Move> legalMoves(Board board) {
-        return Set.of();
     }
 
 }

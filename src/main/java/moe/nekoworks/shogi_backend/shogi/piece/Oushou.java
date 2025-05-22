@@ -1,12 +1,8 @@
 package moe.nekoworks.shogi_backend.shogi.piece;
 
-import moe.nekoworks.shogi_backend.shogi.Board;
-import moe.nekoworks.shogi_backend.shogi.Move;
 import moe.nekoworks.shogi_backend.shogi.Square;
 
-import java.util.Set;
-
-public class Oushou extends Ou{
+public class Oushou extends King {
 
     public Oushou(Square square, boolean isSente) {
         super(square, isSente);
@@ -15,11 +11,6 @@ public class Oushou extends Ou{
     @Override
     public PieceEnum getPieceEnum() {
         return PieceEnum.OU;
-    }
-
-    @Override
-    public Set<Move> legalMoves(Board board) {
-        return Set.of();
     }
 
 }

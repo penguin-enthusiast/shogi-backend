@@ -4,6 +4,7 @@ import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.Move;
 import moe.nekoworks.shogi_backend.shogi.Square;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class Kinshou extends Piece {
@@ -18,8 +19,8 @@ public class Kinshou extends Piece {
     }
 
     @Override
-    public Set<Move> legalMoves(Board board) {
-        return Set.of();
+    public Set<Move> updateLegalMoves(Board board) {
+        return getGoldMoves(board);
     }
 
 }
