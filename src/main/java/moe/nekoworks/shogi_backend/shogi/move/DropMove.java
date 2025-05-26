@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DropMove extends Move {
+public class DropMove extends AbstractMove {
 
     private final PieceEnum piece;
 

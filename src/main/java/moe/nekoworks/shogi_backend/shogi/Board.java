@@ -1,10 +1,10 @@
 package moe.nekoworks.shogi_backend.shogi;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
 import moe.nekoworks.shogi_backend.shogi.move.DropMove;
-import moe.nekoworks.shogi_backend.shogi.move.Move;
+import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
 import moe.nekoworks.shogi_backend.shogi.move.MoveHelper;
 import moe.nekoworks.shogi_backend.shogi.piece.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -12,19 +12,18 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
-@JsonIgnoreProperties(value = {"board", "pieces", "movesPlayed"})
+@JsonIgnoreProperties(value = {"board", "pieces", "movesPlayed", "lastMoveWithNotation"})
 public class Board {
 
     public static final String INITIAL_STATE_MSFEN = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL - - 1";
-
     private static final char[] PIECE_NAMES_JP = {'歩', '香', '桂', '銀', '金', '角', '飛'};
 
     private final Square[][] board;
     private final Set<Piece> pieces;
     private final PiecesInHand piecesInHand = new PiecesInHand();
-    private final LinkedList<Pair<Move, String>> movesPlayed = new LinkedList<>();
-    @JsonManagedReference
-    private final Set<Move> legalMoves = new HashSet<>();
+    private final LinkedList<Pair<AbstractMove, String>> movesPlayed = new LinkedList<>();
+    @JsonBackReference
+    private final Set<AbstractMove> legalMoves = new HashSet<>();
 
     public Board() {
         this(INITIAL_STATE_MSFEN);
@@ -195,6 +194,10 @@ public class Board {
         updateLegalMoves();
     }
 
+    public Square getSquare(AbstractSquare square) {
+        return getSquare(square.x, square.y);
+    }
+
     public Square getSquare(int x, int y) {
         if (0 <= x && x <= 8 && 0 <= y && y <= 8) {
             return board[y][x];
@@ -244,18 +247,32 @@ public class Board {
         return moves;
     }
 
-    public LinkedList<Pair<Move, String>> getMovesPlayed() {
+    public Set<DropMove> getDropMoves() {
+        Set<DropMove> drops = new HashSet<>();
+        drops.addAll(getDropMoves(false));
+        drops.addAll(getDropMoves(true));
+        return drops;
+    }
+
+    public LinkedList<Pair<AbstractMove, String>> getMovesPlayed() {
         return new LinkedList<>(movesPlayed);
     }
 
-    public Pair<Move, String> getLastMove() {
+    public AbstractMove getLastMove() {
+        if (movesPlayed.isEmpty()) {
+            return null;
+        }
+        return movesPlayed.getLast().getLeft();
+    }
+
+    public Pair<AbstractMove, String> getLastMoveWithNotation() {
         if (movesPlayed.isEmpty()) {
             return null;
         }
         return movesPlayed.getLast();
     }
 
-    public Set<Move> getLegalMoves() {
+    public Set<AbstractMove> getLegalMoves() {
         return Collections.unmodifiableSet(legalMoves);
     }
 
@@ -270,7 +287,7 @@ public class Board {
         legalMoves.addAll(getDropMoves(false));
     }
 
-    public boolean commitMove(Move move) {
+    public boolean commitMove(AbstractMove move) {
         if (move == null) {
             return false;
         }
@@ -289,7 +306,7 @@ public class Board {
             return false;
         }
 
-        Move lastMove = getLastMove().getLeft();
+        AbstractMove lastMove = getLastMove();
         lastMove.undoMove();
         movesPlayed.removeLast();
         updateLegalMoves();

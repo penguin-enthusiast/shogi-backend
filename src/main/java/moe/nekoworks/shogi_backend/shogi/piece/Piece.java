@@ -1,7 +1,7 @@
 package moe.nekoworks.shogi_backend.shogi.piece;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
 import moe.nekoworks.shogi_backend.shogi.Square;
@@ -20,7 +20,7 @@ public abstract class Piece {
     private boolean isSente;
     private boolean inHand = false;
     private double lastMoved = 0;
-    @JsonBackReference
+    @JsonManagedReference
     private Set<BoardMove> legalMoves = new HashSet<>();
 
     public Piece(boolean isSente) {

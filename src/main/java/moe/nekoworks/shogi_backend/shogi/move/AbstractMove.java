@@ -6,12 +6,12 @@ import moe.nekoworks.shogi_backend.shogi.piece.PieceEnum;
 
 import java.util.Objects;
 
-public abstract class Move {
+public abstract class AbstractMove {
 
     protected final Square targetSquare;
     private final boolean isSente;
 
-    public Move(Square targetSquare, boolean isSente) {
+    public AbstractMove(Square targetSquare, boolean isSente) {
         this.targetSquare = targetSquare;
         this.isSente = isSente;
     }
@@ -42,7 +42,7 @@ public abstract class Move {
 
     private String getTargetSquareName(Square square) {
         if (getBoard().getLastMove() != null) {
-            Square prevSquare = getBoard().getLastMove().getLeft().targetSquare;
+            Square prevSquare = getBoard().getLastMove().targetSquare;
             if (square == prevSquare) {
                 return "同　";
             }

@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(value = {"piece", "capturedPiece"})
-public class BoardMove extends Move {
+public class BoardMove extends AbstractMove {
 
     private final Square originSquare;
     private final Piece piece;
@@ -23,7 +23,7 @@ public class BoardMove extends Move {
         super(targetSquare, piece.isSente());
         this.piece = piece;
         this.originSquare = piece.getSquare();
-        this.isPromotion = isPromotion;
+        this.isPromotion = isPromotion && MoveHelper.isPromoteable(piece, targetSquare);
         if (targetSquare.getPiece() != null) {
             isCapture = true;
             capturedPiece = targetSquare.getPiece();
@@ -39,7 +39,7 @@ public class BoardMove extends Move {
         this(piece, targetSquare, false);
     }
 
-    private Square getOriginSquare() {
+    public Square getOriginSquare() {
         return originSquare;
     }
 
@@ -130,7 +130,7 @@ public class BoardMove extends Move {
         piecesOfSameType.remove(piece);
         piecesOfSameType.removeIf(p -> p.isSente() != piece.isSente() || !p.getLegalMoves().stream()
                 // For the piece p, get the set of all Squares it can move to
-                .map(Move::getTargetSquare)
+                .map(AbstractMove::getTargetSquare)
                 .collect(Collectors.toSet())
                 .contains(targetSquare));
         // The set piecesOfSameType should now only contain pieces of the same type as the one
