@@ -59,4 +59,28 @@ public enum PieceEnum {
     public MovementClass getMovementClass() {
         return movementClass;
     }
+
+    /*
+     * 0 -> FU
+     * 1 -> KYOU
+     * 2 -> KEI
+     * 3 -> GIN
+     * 4 -> KIN
+     * 5 -> KAKU
+     * 6 -> HI
+     *
+     * easy way to get the piece type from array index when used with PiecesInHand.getPieces
+     */
+    public static PieceEnum getPieceType (int index) {
+        return switch (index) {
+            case 0 -> FU;
+            case 1 -> KYOU;
+            case 2 -> KEI;
+            case 3 -> GIN;
+            case 4 -> KIN;
+            case 5 -> KAKU;
+            case 6 -> HI;
+            default -> throw new IllegalStateException("Unexpected value: " + index);
+        };
+    }
 }

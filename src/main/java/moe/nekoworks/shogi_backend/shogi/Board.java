@@ -344,6 +344,59 @@ public class Board {
         sb.append('\n');
     }
 
+    public String[] getBoardSfen() {
+        String[] sfen = new String[3];
+
+        StringBuilder piecesOnBoard = new StringBuilder();
+        for (int rank = 0; rank < 9; rank ++) {
+            int emptySquares = 0;
+            for (int file = 0; file < 9; file ++) {
+                if (board[rank][file].getPiece() == null) {
+                    emptySquares++;
+                    if (file == 8) {
+                        piecesOnBoard.append(emptySquares);
+                    }
+                } else {
+                    if (emptySquares != 0) {
+                        piecesOnBoard.append(emptySquares);
+                        emptySquares = 0;
+                    }
+                    piecesOnBoard.append(board[rank][file].getPiece().getSymbol(true));
+                }
+            }
+            if (rank != 8) {
+                piecesOnBoard.append('/');
+            }
+        }
+        sfen[0] = piecesOnBoard.toString();
+
+        StringBuilder piecesInHand = new StringBuilder();
+        int[][] hands = getPiecesInHand().getPieces();
+        for (int i = 0; i < hands[0].length; i++) {
+            if (hands[0][i] != 0) { // sente
+                if (hands[0][i] > 1) {
+                    piecesInHand.append(hands[0][i]);
+                }
+                piecesInHand.append(PieceEnum.getPieceType(i).getSymbol().toUpperCase());
+            }
+            if (hands[1][i] != 0) { // gote
+                if (hands[1][i] > 1) {
+                    piecesInHand.append(hands[1][i]);
+                }
+                piecesInHand.append(PieceEnum.getPieceType(i).getSymbol().toLowerCase());
+            }
+        }
+        if (piecesInHand.isEmpty()) {
+            sfen[1] = "-";
+        } else {
+            sfen[1] = piecesInHand.toString();
+        }
+
+        sfen[2] = Integer.toString(movesPlayed.size() + 1);
+
+        return sfen;
+    }
+
     @Override
     public String toString() {
         return printBoardInt();

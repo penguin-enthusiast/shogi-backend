@@ -131,7 +131,19 @@ public abstract class Piece {
     }
 
     public String getSymbol() {
-        return getPieceEnum().getSymbol();
+        return getSymbol(false);
+    }
+
+    public String getSymbol(boolean differentiateSide) {
+        if (differentiateSide) {
+            if (isSente) {
+                return getPieceEnum().getSymbol().toUpperCase();
+            } else {
+                return getPieceEnum().getSymbol().toLowerCase();
+            }
+        } else {
+            return getPieceEnum().getSymbol();
+        }
     }
 
     @Override
