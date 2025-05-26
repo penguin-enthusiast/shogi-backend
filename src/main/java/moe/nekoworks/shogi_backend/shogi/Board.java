@@ -1,5 +1,7 @@
 package moe.nekoworks.shogi_backend.shogi;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
 import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import moe.nekoworks.shogi_backend.shogi.move.Move;
@@ -10,6 +12,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
+@JsonIgnoreProperties(value = {"board", "pieces", "movesPlayed"})
 public class Board {
 
     public static final String INITIAL_STATE_MSFEN = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL - - 1";
@@ -20,6 +23,7 @@ public class Board {
     private final Set<Piece> pieces;
     private final PiecesInHand piecesInHand = new PiecesInHand();
     private final LinkedList<Pair<Move, String>> movesPlayed = new LinkedList<>();
+    @JsonManagedReference
     private final Set<Move> legalMoves = new HashSet<>();
 
     public Board() {

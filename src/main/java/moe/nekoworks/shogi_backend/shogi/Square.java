@@ -1,7 +1,9 @@
 package moe.nekoworks.shogi_backend.shogi;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import moe.nekoworks.shogi_backend.shogi.piece.Piece;
 
+@JsonIgnoreProperties(value = {"board", "piece", "squareNameJP", "squareNameInt"})
 public class Square {
 
     private final int x;

@@ -1,5 +1,6 @@
 package moe.nekoworks.shogi_backend.shogi.move;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.Square;
 import moe.nekoworks.shogi_backend.shogi.piece.Piece;
@@ -8,6 +9,7 @@ import moe.nekoworks.shogi_backend.shogi.piece.PieceEnum;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties(value = {"piece", "capturedPiece"})
 public class BoardMove extends Move {
 
     private final Square originSquare;
