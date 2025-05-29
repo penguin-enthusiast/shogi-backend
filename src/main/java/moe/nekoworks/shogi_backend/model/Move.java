@@ -13,15 +13,15 @@ public class Move {
     private final SGPiece capturedPiece;
 
     public Move(String orig, String dest, boolean prom, SGPiece capturedPiece) {
-        this.orig = Key.convertStringToKey(orig);
-        this.dest = Key.convertStringToKey(dest);
+        this.orig = new Key(orig);
+        this.dest = new Key(dest);
         this.prom = prom;
         this.capturedPiece = capturedPiece;
     }
 
     public Move(@JsonProperty("orig") String orig, @JsonProperty("dest") String dest, @JsonProperty("prom") boolean prom) {
-        this.orig = Key.convertStringToKey(orig);
-        this.dest = Key.convertStringToKey(dest);
+        this.orig = new Key(orig);
+        this.dest = new Key(dest);
         this.prom = prom;
         this.capturedPiece = null;
     }

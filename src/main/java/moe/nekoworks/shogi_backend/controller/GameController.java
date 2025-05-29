@@ -1,15 +1,13 @@
 package moe.nekoworks.shogi_backend.controller;
 
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import moe.nekoworks.shogi_backend.exception.GameException;
+import moe.nekoworks.shogi_backend.model.Drop;
 import moe.nekoworks.shogi_backend.model.JoinRequest;
 import moe.nekoworks.shogi_backend.model.Game;
 import moe.nekoworks.shogi_backend.model.Move;
 import moe.nekoworks.shogi_backend.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
@@ -66,6 +64,29 @@ public class GameController {
         }
     }
 
+    @MessageMapping("/game/{gameId}/drop")
+    @SendTo("/topic/game/{gameId}/move")
+    public ResponseEntity<Drop> makeDrop(@DestinationVariable String gameId,
+                                         @Header("simpSessionId") String sessionId,
+                                         @RequestBody Drop drop) {
+        System.out.println("GameController.makeDrop    gameId: " + gameId + "    session: " + sessionId);
+        try {
+            boolean moveSuccess = gameService.makeDrop(gameId, sessionId, drop);
+            if (moveSuccess) {
+                sendLegalMoves(gameId);
+                HttpHeaders responseHeaders = new HttpHeaders();
+                responseHeaders.set("moveType", "drop");
+                return ResponseEntity.ok()
+                        .headers(responseHeaders)
+                        .body(drop);
+            }
+            return ResponseEntity.badRequest().build();
+        } catch (GameException e) {
+            // TODO do something with the exception
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @MessageMapping("/game/{gameId}/move")
     @SendTo("/topic/game/{gameId}/move")
     public ResponseEntity<Move> makeMove(@DestinationVariable String gameId,
@@ -76,7 +97,11 @@ public class GameController {
             boolean moveSuccess = gameService.makeMove(gameId, sessionId, move);
             if (moveSuccess) {
                 sendLegalMoves(gameId);
-                return ResponseEntity.ok(move);
+                HttpHeaders responseHeaders = new HttpHeaders();
+                responseHeaders.set("moveType", "move");
+                return ResponseEntity.ok()
+                        .headers(responseHeaders)
+                        .body(move);
             }
             return ResponseEntity.badRequest().build();
         } catch (GameException e) {

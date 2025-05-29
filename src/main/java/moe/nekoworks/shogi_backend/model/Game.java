@@ -71,12 +71,12 @@ public class Game {
         HashMap<String, ArrayList<String>> moveMap = new HashMap<>();
         while (moveIterator.hasNext()) {
             Move m = moveIterator.next();
-            if (moveMap.containsKey(m.getOrig().toString())) {
-                moveMap.get(m.getOrig().toString()).add(m.getDest().toString());
+            if (moveMap.containsKey(m.getOrig())) {
+                moveMap.get(m.getOrig()).add(m.getDest());
             } else {
                 ArrayList<String> dests = new ArrayList<>();
-                dests.add(m.getDest().toString());
-                moveMap.put(m.getOrig().toString(), dests);
+                dests.add(m.getDest());
+                moveMap.put(m.getOrig(), dests);
             }
         }
         return moveMap;

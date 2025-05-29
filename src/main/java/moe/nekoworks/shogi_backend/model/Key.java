@@ -1,7 +1,5 @@
 package moe.nekoworks.shogi_backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import moe.nekoworks.shogi_backend.shogi.AbstractSquare;
 
 import java.util.Objects;
@@ -17,16 +15,17 @@ public class Key {
         this.file = file;
     }
 
+    public Key(String key) {
+        rank = Rank.getRankFromChar(key.charAt(1));
+        file = File.getFileFromChar(key.charAt(0));
+    }
+
     public AbstractSquare convertToSquare() {
         return new AbstractSquare(file.getXcoord(), rank.getYCoord());
     }
 
     public static Key convertSquareToKey(AbstractSquare square) {
         return new Key(Rank.getRankFromYCoord(square.getY()), File.getFileFromXCoord(square.getX()));
-    }
-
-    public static Key convertStringToKey(String s) {
-        return new Key(Rank.getRankFromChar(s.charAt(1)), File.getFileFromChar(s.charAt(0)));
     }
 
     @Override

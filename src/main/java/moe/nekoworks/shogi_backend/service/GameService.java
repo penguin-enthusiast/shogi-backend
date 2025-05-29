@@ -1,18 +1,16 @@
 package moe.nekoworks.shogi_backend.service;
 
 import moe.nekoworks.shogi_backend.exception.GameException;
+import moe.nekoworks.shogi_backend.model.Drop;
 import moe.nekoworks.shogi_backend.model.Game;
-import moe.nekoworks.shogi_backend.model.Key;
 import moe.nekoworks.shogi_backend.model.Move;
 import moe.nekoworks.shogi_backend.repository.GameRepository;
-import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
 import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
-import org.springframework.http.ResponseEntity;
+import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 public class GameService {
@@ -45,6 +43,26 @@ public class GameService {
         return game;
     }
 
+    public boolean makeDrop(String gameId, String playerId, Drop drop) {
+        Game game = getGameByID(gameId);
+//            if (game.getPlayer1() == null || game.getPlayer2() == null) {
+//                throw new GameException("The game hasn't started yet.");
+//            }
+        boolean isSente;
+        if (playerId.equals(game.getPlayer1())) {
+            isSente = true;
+        } else if (playerId.equals(game.getPlayer2())) {
+            isSente = false;
+        } else {
+            throw new GameException("Client making move must be a player.");
+        }
+        DropMove dropMove = drop.buildDrop(game.getBoard());
+        if (isSente == dropMove.isSente()) {
+            return game.getBoard().commitMove(dropMove);
+        }
+        throw new GameException("Invalid move.");
+    }
+
     public boolean makeMove(String gameId, String playerId, Move move) {
         Game game = getGameByID(gameId);
 //            if (game.getPlayer1() == null || game.getPlayer2() == null) {
@@ -61,7 +79,6 @@ public class GameService {
         BoardMove boardMove = move.buildMove(game.getBoard());
         if (isSente == boardMove.isSente()) {
             return game.getBoard().commitMove(boardMove);
-
         }
         throw new GameException("Invalid move.");
     }
