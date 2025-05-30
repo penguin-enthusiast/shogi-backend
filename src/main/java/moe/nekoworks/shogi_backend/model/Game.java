@@ -14,12 +14,15 @@ public class Game {
 
     private final String gameId;
     private final Board board;
-    private String player1; // sente
+    private final String player1; // sente
     private String player2; // gote
+    private GameStatus status;
 
-    public Game() {
+    public Game(String player1) {
         board = new Board();
         gameId = UUID.randomUUID().toString();
+        this.player1 = player1;
+        status = GameStatus.WAITING;
     }
 
     public String getGameId() {
@@ -34,16 +37,21 @@ public class Game {
         return player1;
     }
 
-    public void setPlayer1(String player1) {
-        this.player1 = player1;
-    }
-
     public String getPlayer2() {
         return player2;
     }
 
-    public void setPlayer2(String player2) {
+    public GameStatus getStatus() {
+        return status;
+    }
+
+    public void joinGame(String player2) {
         this.player2 = player2;
+        status = GameStatus.IN_PROGRESS;
+    }
+
+    public void finishGame() {
+        status = GameStatus.FINISHED;
     }
 
     @JsonProperty("sfen")
@@ -94,7 +102,7 @@ public class Game {
         while (dropIterator.hasNext()) {
             Drop d = dropIterator.next();
             ArrayList<String> arr = dropMap.get(d.getPiece().toString());
-            arr.add(d.getKey().toString());
+            arr.add(d.getKey());
         }
         return dropMap;
     }

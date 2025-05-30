@@ -69,10 +69,14 @@ public class BoardMove extends AbstractMove {
     }
 
     @Override
-    public void makeMove() {
+    public boolean makeMove() {
+        boolean kingCapture = false;
         Board board = getBoard();
         if (isCapture()) {
             Piece capturedPiece = getCapturedPiece();
+            if (capturedPiece.getPieceEnum() == (isSente() ? PieceEnum.OU : PieceEnum.GYOKU)) {
+                kingCapture = true;
+            }
             capturedPiece.setInHand(true);
             capturedPiece.setSente(isSente());
             capturedPiece.clearLegalMoves();
@@ -86,6 +90,7 @@ public class BoardMove extends AbstractMove {
         if (isPromotion()) {
             getPiece().setPromoted(true);
         }
+        return kingCapture;
     }
 
     @Override

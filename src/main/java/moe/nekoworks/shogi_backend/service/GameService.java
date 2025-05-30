@@ -1,6 +1,7 @@
 package moe.nekoworks.shogi_backend.service;
 
 import moe.nekoworks.shogi_backend.exception.GameException;
+import moe.nekoworks.shogi_backend.misc.Utils;
 import moe.nekoworks.shogi_backend.model.Drop;
 import moe.nekoworks.shogi_backend.model.Game;
 import moe.nekoworks.shogi_backend.model.Move;
@@ -10,7 +11,9 @@ import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class GameService {
@@ -22,32 +25,31 @@ public class GameService {
     }
 
     public Game createGame(String playerId) {
-        Game game = new Game();
-        game.setPlayer1(playerId);
+        Game game = new Game(playerId);
         gameRepository.save(game);
         return game;
     }
 
     public Game joinGame(String playerId, String gameID) {
-        Game game = getGameByID(gameID);
+        Game game = getGameById(gameID);
         if (game.getPlayer2() != null) {
             throw new GameException("Someone already joined this game.");
         }
-        game.setPlayer2(playerId);
+        game.joinGame(playerId);
         return game;
     }
 
     public Game connectToRandomGame(String playerId) {
         Game game = gameRepository.findAvailableGame();
-        game.setPlayer2(playerId);
+        game.joinGame(playerId);
         return game;
     }
 
     public boolean makeDrop(String gameId, String playerId, Drop drop) {
-        Game game = getGameByID(gameId);
-//            if (game.getPlayer1() == null || game.getPlayer2() == null) {
-//                throw new GameException("The game hasn't started yet.");
-//            }
+        Game game = getGameById(gameId);
+        if (game.getPlayer1() == null || game.getPlayer2() == null) {
+            throw new GameException("The game hasn't started yet.");
+        }
         boolean isSente;
         if (playerId.equals(game.getPlayer1())) {
             isSente = true;
@@ -64,10 +66,10 @@ public class GameService {
     }
 
     public boolean makeMove(String gameId, String playerId, Move move) {
-        Game game = getGameByID(gameId);
-//            if (game.getPlayer1() == null || game.getPlayer2() == null) {
-//                throw new GameException("The game hasn't started yet.");
-//            }
+        Game game = getGameById(gameId);
+        if (Utils.StringIsEmpty(game.getPlayer1()) || Utils.StringIsEmpty(game.getPlayer2())) {
+            throw new GameException("The game hasn't started yet.");
+        }
         boolean isSente;
         if (playerId.equals(game.getPlayer1())) {
             isSente = true;
@@ -84,7 +86,7 @@ public class GameService {
     }
 
     public Map<String, ArrayList<String>> getLegalMoves (String gameId, String sessionId) {
-        Game game = getGameByID(gameId);
+        Game game = getGameById(gameId);
         if (game.getPlayer1().equals(sessionId)) {
             return game.legalMoves(true);
         } else if (game.getPlayer2().equals(sessionId)) {
@@ -94,7 +96,7 @@ public class GameService {
     }
 
     public Map<String, ArrayList<String>> getLegalDrops (String gameId, String sessionId) {
-        Game game = getGameByID(gameId);
+        Game game = getGameById(gameId);
         if (game.getPlayer1().equals(sessionId)) {
             return game.legalDrops(true);
         } else if (game.getPlayer2().equals(sessionId)) {
@@ -103,11 +105,28 @@ public class GameService {
         return null;
     }
 
-    public Game getGameByID(String gameID) {
-        Game game = gameRepository.findById(gameID);
+    public Game getGameById(String gameID) {
+        Game game = gameRepository.findByGameId(gameID);
         if (game == null) {
             throw new GameException("Game not found.");
         }
         return game;
+    }
+
+    public Game getGameByPlayerId(String playerId) {
+        return gameRepository.findByPlayerId(playerId);
+    }
+
+    public void finishGame(Game game) {
+        game.finishGame();
+        // delete game from memory for now, maybe save to db in future?
+        gameRepository.deleteGame(game.getGameId());
+    }
+
+    public Set<String> getConnectedClients(Game game) {
+        HashSet<String> clients = new HashSet<>();
+        clients.add(game.getPlayer1());
+        clients.add(game.getPlayer2());
+        return clients;
     }
 }

@@ -2,6 +2,7 @@ package moe.nekoworks.shogi_backend.shogi;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import moe.nekoworks.shogi_backend.exception.GameException;
 import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
 import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
@@ -287,18 +288,19 @@ public class Board {
         legalMoves.addAll(getDropMoves(false));
     }
 
+    // returns whether the move captures a king
     public boolean commitMove(AbstractMove move) {
         if (move == null) {
-            return false;
+            throw new GameException("Illegal move.");
         }
 
-        if(legalMoves.contains(move)) {
-            move.makeMove();
+        if (legalMoves.contains(move)) {
+            boolean kingCapture = move.makeMove();
             movesPlayed.add(new ImmutablePair<>(move, move.toString()));
             updateLegalMoves();
-            return true;
+            return kingCapture;
         }
-        return false;
+        throw new GameException("Illegal move.");
     }
 
     public boolean undoLastMove() {

@@ -52,7 +52,7 @@ public abstract class AbstractMove {
 
     public abstract PieceEnum getPieceType();
 
-    public abstract void makeMove();
+    public abstract boolean makeMove();
 
     public abstract void undoMove();
 

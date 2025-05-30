@@ -23,11 +23,12 @@ public class DropMove extends AbstractMove {
     }
 
     @Override
-    public void makeMove() {
+    public boolean makeMove() {
         Piece piece = getBoard().getPiecesInHand().take(getPieceType(), isSente());
         piece.setSquare(getTargetSquare());
         getTargetSquare().setPiece(piece);
         piece.setInHand(false);
+        return false;
     }
 
     @Override
