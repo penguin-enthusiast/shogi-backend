@@ -142,43 +142,15 @@ public class GameController {
     public void sendLegalMoves(String gameId) {
         Game game = gameService.getGameById(gameId);
         String destination = "/topic/game/" + gameId + "/legalMoves";
-        String player1 = game.getPlayer1();
-        String player2 = game.getPlayer2();
-        Map<String, ArrayList<String>> movesP1 = gameService.getLegalMoves(gameId, player1);
-        Map<String, ArrayList<String>> movesP2 = gameService.getLegalMoves(gameId, player2);
-        ResponseEntity<Map<String, ArrayList<String>>> responseP1 = ResponseEntity.ok(movesP1);
-        ResponseEntity<Map<String, ArrayList<String>>> responseP2 = ResponseEntity.ok(movesP2);
+        for (String s : gameService.getConnectedClients(game)) {
+            Map<String, ArrayList<String>> movesP1 = gameService.getLegalMoves(gameId, s);
+            ResponseEntity<Map<String, ArrayList<String>>> responseP1 = ResponseEntity.ok(movesP1);
 
-        SimpMessageHeaderAccessor headerAccessorP1 = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
-        headerAccessorP1.setSessionId(player1);
-        headerAccessorP1.setLeaveMutable(true);
-        SimpMessageHeaderAccessor headerAccessorP2 = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
-        headerAccessorP2.setSessionId(player2);
-        headerAccessorP2.setLeaveMutable(true);
+            SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
+            headerAccessor.setSessionId(s);
+            headerAccessor.setLeaveMutable(true);
 
-        simpMessagingTemplate.convertAndSendToUser(player1, destination, responseP1, headerAccessorP1.getMessageHeaders());
-        simpMessagingTemplate.convertAndSendToUser(player2, destination, responseP2, headerAccessorP2.getMessageHeaders());
-    }
-
-    @MessageMapping("/game/{gameId}/getMoves")
-    @SendToUser("/topic/game/{gameId}/legalMoves")
-    public ResponseEntity<Map<String, ArrayList<String>>> getLegalMoves(@DestinationVariable String gameId,
-                                                                        @Header("simpSessionId") String sessionId) {
-        try {
-            return ResponseEntity.ok(gameService.getLegalMoves(gameId, sessionId));
-        } catch (GameException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @MessageMapping("/game/{gameId}/getDrops")
-    @SendToUser("/topic/game/{gameId}/legalDrops")
-    public ResponseEntity<Map<String, ArrayList<String>>> getLegalDrops(@DestinationVariable String gameId,
-                                                                        @Header("simpSessionId") String sessionId) {
-        try {
-            return ResponseEntity.ok(gameService.getLegalDrops(gameId, sessionId));
-        } catch (GameException e) {
-            return ResponseEntity.badRequest().build();
+            simpMessagingTemplate.convertAndSendToUser(s, destination, responseP1, headerAccessor.getMessageHeaders());
         }
     }
 
