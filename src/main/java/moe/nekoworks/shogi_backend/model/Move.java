@@ -5,7 +5,7 @@ import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.Square;
 import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
 
-public class Move {
+public class Move extends AbstractSGBoardAction<BoardMove> {
 
     private final Key orig;
     private final Key dest;
@@ -49,6 +49,7 @@ public class Move {
         return capturedPiece;
     }
 
+    @Override
     public BoardMove buildMove(Board board) {
         Square originSquare = board.getSquare(orig.convertToSquare());
         Square targetSquare = board.getSquare(dest.convertToSquare());
@@ -56,5 +57,10 @@ public class Move {
             return null;
         }
         return new BoardMove(originSquare.getPiece(), targetSquare, prom);
+    }
+
+    @Override
+    public String type() {
+        return "move";
     }
 }

@@ -6,7 +6,7 @@ import moe.nekoworks.shogi_backend.shogi.Square;
 import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import moe.nekoworks.shogi_backend.shogi.piece.PieceEnum;
 
-public class Drop {
+public class Drop extends AbstractSGBoardAction<DropMove> {
 
     private final SGPiece piece;
     private final Key key;
@@ -30,10 +30,16 @@ public class Drop {
         return key.toString();
     }
 
-    public DropMove buildDrop(Board board) {
+    @Override
+    public DropMove buildMove(Board board) {
         Square targetSquare = board.getSquare(key.convertToSquare());
         PieceEnum pieceEnum = PieceEnum.getPieceFromSgRole(piece.getRole());
         boolean isSente = piece.getColor().equals("sente");
         return new DropMove(targetSquare, pieceEnum, isSente);
+    }
+
+    @Override
+    public String type() {
+        return "drop";
     }
 }

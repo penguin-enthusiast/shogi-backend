@@ -2,12 +2,10 @@ package moe.nekoworks.shogi_backend.service;
 
 import moe.nekoworks.shogi_backend.exception.GameException;
 import moe.nekoworks.shogi_backend.misc.Utils;
-import moe.nekoworks.shogi_backend.model.Drop;
+import moe.nekoworks.shogi_backend.model.AbstractSGBoardAction;
 import moe.nekoworks.shogi_backend.model.Game;
-import moe.nekoworks.shogi_backend.model.Move;
 import moe.nekoworks.shogi_backend.repository.GameRepository;
-import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
-import moe.nekoworks.shogi_backend.shogi.move.DropMove;
+import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -60,28 +58,7 @@ public class GameService {
         return game;
     }
 
-    public boolean makeDrop(String gameId, String playerId, Drop drop) {
-        Game game = getGameById(gameId);
-        if (game.getPlayer1() == null || game.getPlayer2() == null) {
-            throw new GameException("The game hasn't started yet.");
-        }
-        boolean isSente;
-        if (playerId.equals(game.getPlayer1())) {
-            isSente = true;
-        } else if (playerId.equals(game.getPlayer2())) {
-            isSente = false;
-        } else {
-            throw new GameException("Client making move must be a player.");
-        }
-        DropMove dropMove = drop.buildDrop(game.getBoard());
-        if (isSente == dropMove.isSente()) {
-            return game.getBoard().commitMove(dropMove);
-        }
-        throw new GameException("Invalid move.");
-    }
-
-    public boolean makeMove(String gameId, String playerId, Move move) {
-        Game game = getGameById(gameId);
+    public boolean makeMove(Game game, String playerId, AbstractSGBoardAction<?> action) {
         if (Utils.StringIsEmpty(game.getPlayer1()) || Utils.StringIsEmpty(game.getPlayer2())) {
             throw new GameException("The game hasn't started yet.");
         }
@@ -93,9 +70,9 @@ public class GameService {
         } else {
             throw new GameException("Client making move must be a player.");
         }
-        BoardMove boardMove = move.buildMove(game.getBoard());
-        if (isSente == boardMove.isSente()) {
-            return game.getBoard().commitMove(boardMove);
+        AbstractMove move = action.buildMove(game.getBoard());
+        if (isSente == move.isSente()) {
+            return game.getBoard().commitMove(move);
         }
         throw new GameException("Invalid move.");
     }
@@ -106,16 +83,6 @@ public class GameService {
             return game.legalMoves(true);
         } else if (game.getPlayer2().equals(sessionId)) {
             return game.legalMoves(false);
-        }
-        return null;
-    }
-
-    public Map<String, ArrayList<String>> getLegalDrops (String gameId, String sessionId) {
-        Game game = getGameById(gameId);
-        if (game.getPlayer1().equals(sessionId)) {
-            return game.legalDrops(true);
-        } else if (game.getPlayer2().equals(sessionId)) {
-            return game.legalDrops(false);
         }
         return null;
     }
