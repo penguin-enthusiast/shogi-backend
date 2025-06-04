@@ -1,10 +1,7 @@
 package moe.nekoworks.shogi_backend.controller;
 
 import moe.nekoworks.shogi_backend.exception.GameException;
-import moe.nekoworks.shogi_backend.model.Drop;
-import moe.nekoworks.shogi_backend.model.JoinRequest;
-import moe.nekoworks.shogi_backend.model.Game;
-import moe.nekoworks.shogi_backend.model.Move;
+import moe.nekoworks.shogi_backend.model.*;
 import moe.nekoworks.shogi_backend.service.GameService;
 import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
 import org.springframework.http.HttpHeaders;
@@ -40,37 +37,56 @@ public class GameController {
 
     @MessageMapping("/create")
     @SendToUser("/topic/game")
-    public ResponseEntity<Game> create(@Header("simpSessionId") String sessionId) {
-        return ResponseEntity.ok(gameService.createGame(sessionId));
+    public void create(@Header("simpSessionId") String sessionId) {
+        Game game = gameService.createGame(sessionId);
+        joinGame(sessionId, game);
     }
 
     @MessageMapping("/join")
-    @SendToUser("/topic/game")
-    public ResponseEntity<Game> join(@Header("simpSessionId") String sessionId, @RequestBody JoinRequest request) {
+    public void joinById(@Header("simpSessionId") String sessionId, @RequestBody JoinRequest request) {
         try {
             Game game = gameService.joinGame(sessionId, request.getGameId());
-            sendGameUpdate(game, game.getPlayer1(), null);
-            sendLegalMoves(game.getGameId());
-            return ResponseEntity.ok(game);
+            joinGame(sessionId, game);
+            sendGameUpdate(game, gameService.getConnectedClients(game), null);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            sendGameNotFoundResponse(sessionId);
         }
     }
 
     @MessageMapping("/join/random")
-    @SendToUser("/topic/game")
-    public ResponseEntity<Game> joinRandom(@Header("simpSessionId") String sessionId) {
+    public void joinRandom(@Header("simpSessionId") String sessionId) {
         try {
             Game game = gameService.connectToRandomGame(sessionId);
-            sendGameUpdate(game, game.getPlayer1(), null);
-            sendLegalMoves(game.getGameId());
-            return ResponseEntity.ok(game);
+            joinGame(sessionId, game);
+            sendGameUpdate(game, gameService.getConnectedClients(game), null);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            sendGameNotFoundResponse(sessionId);
         }
     }
 
-    public void sendGameUpdate(Game game, String client, HttpHeaders responseHeaders) {
+    public void joinGame(String sessionId, Game game) {
+        String destination = "/topic/game";
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set("playerId", sessionId);
+        ResponseEntity<Game> response = ResponseEntity.ok()
+                .headers(responseHeaders)
+                .body(game);
+        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
+        headerAccessor.setSessionId(sessionId);
+        headerAccessor.setLeaveMutable(true);
+        simpMessagingTemplate.convertAndSendToUser(sessionId, destination, response, headerAccessor.getMessageHeaders());
+    }
+
+    @MessageMapping("/game/{gameId}/setReadyStatus")
+    public void setReadyStatus(@DestinationVariable String gameId, @Header("simpSessionId") String sessionId) {
+        Game game = gameService.togglePlayerReadyStatus(gameId, sessionId);
+        if (game.getStatus() == GameStatus.IN_PROGRESS) {
+            sendLegalMoves(game.getGameId());
+        }
+        sendGameUpdate(game, gameService.getConnectedClients(game), null);
+    }
+
+    public void sendGameUpdate(Game game,    String client, HttpHeaders responseHeaders) {
         HashSet<String> clients = new HashSet<>();
         clients.add(client);
         sendGameUpdate(game, clients, responseHeaders);
@@ -82,12 +98,9 @@ public class GameController {
                 .headers(responseHeaders)
                 .body(game);
 
-        for (String s : clients) {
-            SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
-            headerAccessor.setSessionId(s);
-            headerAccessor.setLeaveMutable(true);
-            simpMessagingTemplate.convertAndSend(destination, response, headerAccessor.getMessageHeaders());
-        }
+        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
+        headerAccessor.setLeaveMutable(true);
+        simpMessagingTemplate.convertAndSend(destination, response, headerAccessor.getMessageHeaders());
     }
 
     @MessageMapping("/game/{gameId}/drop")
@@ -95,7 +108,6 @@ public class GameController {
     public ResponseEntity<Drop> makeDrop(@DestinationVariable String gameId,
                                          @Header("simpSessionId") String sessionId,
                                          @RequestBody Drop drop) {
-        System.out.println("GameController.makeDrop    gameId: " + gameId + "    session: " + sessionId);
         try {
             gameService.makeDrop(gameId, sessionId, drop);
             sendLegalMoves(gameId);
@@ -114,7 +126,6 @@ public class GameController {
     public void makeMove(@DestinationVariable String gameId,
                                             @Header("simpSessionId") String sessionId,
                                             @RequestBody Move move) {
-        System.out.println("GameController.makeMove    gameId: " + gameId + "    session: " + sessionId);
         String destination = "/topic/game/" + gameId + "/move";
         try {
             boolean kingCapture = gameService.makeMove(gameId, sessionId, move);
@@ -159,7 +170,6 @@ public class GameController {
         try {
             playerDisconnected(sessionId, gameService.getGameById(gameId));
         } catch (GameException e) {
-            System.out.println("Couldn't find game.");
         }
     }
 
@@ -186,7 +196,6 @@ public class GameController {
         responseHeaders.set("method", "disconnect");
 
         gameService.finishGame(game);
-        System.out.println("disconnected from game, status is now " + game.getStatus());
         sendGameUpdate(game, otherPlayer, responseHeaders);
     }
 
@@ -205,5 +214,16 @@ public class GameController {
 
         gameService.finishGame(game);
         sendGameUpdate(game, clients, responseHeaders);
+    }
+
+    public void sendGameNotFoundResponse(String SessionId) {
+        String destination = "/topic/game";
+
+        ResponseEntity<Object> responseP1 = ResponseEntity.notFound().build();
+        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
+        headerAccessor.setSessionId(SessionId);
+        headerAccessor.setLeaveMutable(true);
+
+        simpMessagingTemplate.convertAndSendToUser(SessionId, destination, responseP1, headerAccessor.getMessageHeaders());
     }
 }

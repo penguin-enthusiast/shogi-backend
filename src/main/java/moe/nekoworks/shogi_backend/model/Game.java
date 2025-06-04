@@ -17,6 +17,8 @@ public class Game {
     private final String player1; // sente
     private String player2; // gote
     private GameStatus status;
+    private boolean player1Ready = false;
+    private boolean player2Ready = false;
 
     public Game(String player1) {
         board = new Board();
@@ -45,8 +47,27 @@ public class Game {
         return status;
     }
 
+    public boolean isPlayer1Ready() {
+        return player1Ready;
+    }
+
+    public void setPlayer1Ready(boolean player1Ready) {
+        this.player1Ready = player1Ready;
+    }
+
+    public boolean isPlayer2Ready() {
+        return player2Ready;
+    }
+
+    public void setPlayer2Ready(boolean player2Ready) {
+        this.player2Ready = player2Ready;
+    }
+
     public void joinGame(String player2) {
         this.player2 = player2;
+    }
+
+    public void startGame() {
         status = GameStatus.IN_PROGRESS;
     }
 

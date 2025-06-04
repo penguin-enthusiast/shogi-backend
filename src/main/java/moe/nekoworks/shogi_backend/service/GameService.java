@@ -45,6 +45,21 @@ public class GameService {
         return game;
     }
 
+    public Game togglePlayerReadyStatus(String gameId, String playerId) {
+        Game game = getGameById(gameId);
+        if (playerId.equals(game.getPlayer1())) {
+            game.setPlayer1Ready(!game.isPlayer1Ready());
+        } else if (playerId.equals(game.getPlayer2())) {
+            game.setPlayer2Ready(!game.isPlayer2Ready());
+        } else {
+            throw new GameException("Not a player");
+        }
+        if (game.isPlayer1Ready() && game.isPlayer2Ready()) {
+            game.startGame();
+        }
+        return game;
+    }
+
     public boolean makeDrop(String gameId, String playerId, Drop drop) {
         Game game = getGameById(gameId);
         if (game.getPlayer1() == null || game.getPlayer2() == null) {
