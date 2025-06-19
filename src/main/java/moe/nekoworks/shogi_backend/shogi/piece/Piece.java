@@ -19,7 +19,7 @@ public abstract class Piece {
     private Square square;
     private boolean isSente;
     private boolean inHand = false;
-    private double lastMoved = 0;
+    private long lastMoved = 0;
     @JsonManagedReference
     private Set<BoardMove> legalMoves = new HashSet<>();
 
@@ -35,11 +35,11 @@ public abstract class Piece {
         square.setPiece(this);
     }
 
-    public double getLastMoved() {
+    public long getLastMoved() {
         return lastMoved;
     }
 
-    public void setLastMoved(double lastMoved) {
+    public void setLastMoved(long lastMoved) {
         this.lastMoved = lastMoved;
     }
 

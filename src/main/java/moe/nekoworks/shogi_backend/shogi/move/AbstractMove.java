@@ -11,6 +11,8 @@ public abstract class AbstractMove {
     protected final Square targetSquare;
     private final boolean isSente;
 
+    private long timestamp;
+
     public AbstractMove(Square targetSquare, boolean isSente) {
         this.targetSquare = targetSquare;
         this.isSente = isSente;
@@ -22,6 +24,14 @@ public abstract class AbstractMove {
 
     public boolean isSente() {
         return isSente;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     protected Board getBoard() {
@@ -55,6 +65,8 @@ public abstract class AbstractMove {
     public abstract boolean makeMove();
 
     public abstract void undoMove();
+
+    public abstract boolean offCooldown();
 
     protected abstract String getDisambiguationJP();
 

@@ -72,7 +72,9 @@ public class GameService {
         }
         AbstractMove move = action.buildMove(game.getBoard());
         if (isSente == move.isSente()) {
-            return game.getBoard().commitMove(move);
+            boolean kingCapture = game.getBoard().commitMove(move);
+            action.setTimestamp(move.getTimestamp());
+            return kingCapture;
         }
         throw new GameException("Invalid move.");
     }

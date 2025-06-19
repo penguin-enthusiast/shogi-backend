@@ -1,6 +1,7 @@
 package moe.nekoworks.shogi_backend.controller;
 
 import moe.nekoworks.shogi_backend.exception.GameException;
+import moe.nekoworks.shogi_backend.exception.MoveException;
 import moe.nekoworks.shogi_backend.model.*;
 import moe.nekoworks.shogi_backend.service.GameService;
 import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
@@ -99,27 +100,27 @@ public class GameController {
     public void makeDrop(@DestinationVariable String gameId,
                          @Header("simpSessionId") String sessionId,
                          @RequestBody Drop drop) {
-        String destination = "/topic/game/" + gameId + "/move";
-        try {
-            Game game = getGame(gameId);
-            gameService.makeMove(game, sessionId, drop);
-            sendLegalMoves(gameId);
-            sendMove(gameId, drop);
-        } catch (GameException e) {
-            // TODO do something with the exception
-            simpMessagingTemplate.convertAndSend(destination, ResponseEntity.badRequest().build());
-        }
+        makeAbstractMove(gameId, sessionId, drop);
     }
 
     @MessageMapping("/game/{gameId}/move")
     public void makeMove(@DestinationVariable String gameId,
                          @Header("simpSessionId") String sessionId,
                          @RequestBody Move move) {
+        makeAbstractMove(gameId, sessionId, move);
+        }
+
+    private void makeAbstractMove(String gameId, String sessionId, AbstractSGBoardAction<?> action) {
         String destination = "/topic/game/" + gameId + "/move";
         try {
             Game game = getGame(gameId);
-            boolean kingCapture = gameService.makeMove(game, sessionId, move);
-            sendMove(gameId, move);
+            boolean kingCapture = false;
+            try {
+                kingCapture = gameService.makeMove(game, sessionId, action);
+            } catch (MoveException e) {
+                sendGameUpdate(game, null);
+            }
+            sendMove(gameId, action);
             sendLegalMoves(gameId);
 
             if (kingCapture) {
