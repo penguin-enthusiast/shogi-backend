@@ -19,11 +19,13 @@ public class Game {
     private GameStatus status;
     private boolean player1Ready = false;
     private boolean player2Ready = false;
+    private int cooldownTime;
 
     public Game(String player1) {
         board = new Board();
         gameId = UUID.randomUUID().toString();
         this.player1 = player1;
+        cooldownTime = 5000; // TODO hardcode 5s cooldown for now, change later
         status = GameStatus.WAITING;
     }
 
@@ -61,6 +63,14 @@ public class Game {
 
     public void setPlayer2Ready(boolean player2Ready) {
         this.player2Ready = player2Ready;
+    }
+
+    public int getCooldownTime() {
+        return cooldownTime;
+    }
+
+    public void setCooldownTime(int cooldownTime) {
+        this.cooldownTime = cooldownTime;
     }
 
     public void joinGame(String player2) {
