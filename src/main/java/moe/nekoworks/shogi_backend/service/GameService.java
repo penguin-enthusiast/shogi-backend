@@ -3,8 +3,10 @@ package moe.nekoworks.shogi_backend.service;
 import moe.nekoworks.shogi_backend.exception.GameException;
 import moe.nekoworks.shogi_backend.misc.Utils;
 import moe.nekoworks.shogi_backend.model.AbstractSGBoardAction;
+import moe.nekoworks.shogi_backend.model.EngineGame;
 import moe.nekoworks.shogi_backend.model.Game;
 import moe.nekoworks.shogi_backend.repository.GameRepository;
+import moe.nekoworks.shogi_backend.shogi.engine.Engine;
 import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,13 @@ public class GameService {
 
     public Game createGame(String playerId) {
         Game game = new Game(playerId);
+        gameRepository.save(game);
+        return game;
+    }
+
+    public EngineGame createEngineGame(String playerId, String engineName) {
+        EngineGame game = new EngineGame(playerId, engineName);
+        game.setPlayer2Ready(true);
         gameRepository.save(game);
         return game;
     }
@@ -72,7 +81,9 @@ public class GameService {
         }
         AbstractMove move = action.buildMove(game.getBoard());
         if (isSente == move.isSente()) {
-            return game.getBoard().commitMove(move);
+            boolean kingCapture = game.getBoard().commitMove(move);
+            action.setTimestamp(move.getTimestamp());
+            return kingCapture;
         }
         throw new GameException("Invalid move.");
     }

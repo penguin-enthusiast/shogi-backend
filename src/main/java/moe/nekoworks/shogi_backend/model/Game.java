@@ -14,16 +14,18 @@ public class Game {
 
     private final String gameId;
     private final Board board;
-    private final String player1; // sente
+    private String player1; // sente
     private String player2; // gote
     private GameStatus status;
     private boolean player1Ready = false;
     private boolean player2Ready = false;
+    private int cooldownTime;
 
     public Game(String player1) {
         board = new Board();
         gameId = UUID.randomUUID().toString();
         this.player1 = player1;
+        cooldownTime = 5000; // TODO hardcode 5s cooldown for now, change later
         status = GameStatus.WAITING;
     }
 
@@ -39,8 +41,16 @@ public class Game {
         return player1;
     }
 
+    protected void setPlayer1(String player1) {
+        this.player1 = player1;
+    }
+
     public String getPlayer2() {
         return player2;
+    }
+
+    protected void setPlayer2(String player2) {
+        this.player2 = player2;
     }
 
     public GameStatus getStatus() {
@@ -61,6 +71,14 @@ public class Game {
 
     public void setPlayer2Ready(boolean player2Ready) {
         this.player2Ready = player2Ready;
+    }
+
+    public int getCooldownTime() {
+        return cooldownTime;
+    }
+
+    public void setCooldownTime(int cooldownTime) {
+        this.cooldownTime = cooldownTime;
     }
 
     public void joinGame(String player2) {

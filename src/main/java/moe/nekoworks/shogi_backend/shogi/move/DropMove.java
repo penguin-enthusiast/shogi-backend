@@ -1,5 +1,7 @@
 package moe.nekoworks.shogi_backend.shogi.move;
 
+import moe.nekoworks.shogi_backend.misc.TimeUtils;
+import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.Square;
 import moe.nekoworks.shogi_backend.shogi.piece.Piece;
 import moe.nekoworks.shogi_backend.shogi.piece.PieceEnum;
@@ -28,6 +30,13 @@ public class DropMove extends AbstractMove {
         piece.setSquare(getTargetSquare());
         getTargetSquare().setPiece(piece);
         piece.setInHand(false);
+        long timeStamp = TimeUtils.getCurrentTime();
+        if (isSente()) {
+            getBoard().setLastDropTimeStampSente(timeStamp);
+        } else {
+            getBoard().setLastDropTimeStampGote(timeStamp);
+        }
+        super.setTimestamp(timeStamp);
         return false;
     }
 
@@ -40,6 +49,13 @@ public class DropMove extends AbstractMove {
         piece.setPromoted(false);
         getTargetSquare().setPiece(null);
         getBoard().getPiecesInHand().add(piece);
+        super.setTimestamp(0);
+    }
+
+    @Override
+    public boolean offCooldown() {
+        long lastMoved = isSente() ? getBoard().getLastDropTimeStampSente() : getBoard().getLastDropTimeStampGote();
+        return lastMoved + Board.cooldown < TimeUtils.getCurrentTime();
     }
 
     @Override

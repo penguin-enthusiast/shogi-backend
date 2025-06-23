@@ -1,6 +1,7 @@
 package moe.nekoworks.shogi_backend.shogi.move;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import moe.nekoworks.shogi_backend.misc.TimeUtils;
 import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.Square;
 import moe.nekoworks.shogi_backend.shogi.piece.Piece;
@@ -90,6 +91,9 @@ public class BoardMove extends AbstractMove {
         if (isPromotion()) {
             getPiece().setPromoted(true);
         }
+        long timeStamp = TimeUtils.getCurrentTime();
+        piece.setLastMoved(timeStamp);
+        super.setTimestamp(timeStamp);
         return kingCapture;
     }
 
@@ -110,7 +114,13 @@ public class BoardMove extends AbstractMove {
             capturedPiece.setSquare(targetSquare);
             getTargetSquare().setPiece(capturedPiece);
         }
+        super.setTimestamp(0);
 
+    }
+
+    @Override
+    public boolean offCooldown() {
+        return piece.getLastMoved() + Board.cooldown < TimeUtils.getCurrentTime();
     }
 
     @Override

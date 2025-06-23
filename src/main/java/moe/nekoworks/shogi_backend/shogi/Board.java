@@ -3,6 +3,8 @@ package moe.nekoworks.shogi_backend.shogi;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import moe.nekoworks.shogi_backend.exception.GameException;
+import moe.nekoworks.shogi_backend.exception.MoveException;
+import moe.nekoworks.shogi_backend.misc.TimeUtils;
 import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
 import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
@@ -17,6 +19,8 @@ import java.util.*;
 public class Board {
 
     public static final String INITIAL_STATE_MSFEN = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL - - 1";
+    // piece cooldown in milliseconds
+    public static final long cooldown = 5000;
     private static final char[] PIECE_NAMES_JP = {'歩', '香', '桂', '銀', '金', '角', '飛'};
 
     private final Square[][] board;
@@ -25,6 +29,10 @@ public class Board {
     private final LinkedList<Pair<AbstractMove, String>> movesPlayed = new LinkedList<>();
     @JsonBackReference
     private final Set<AbstractMove> legalMoves = new HashSet<>();
+
+    private long startTimeStamp;
+    private long lastDropTimeStampSente;
+    private long lastDropTimeStampGote;
 
     public Board() {
         this(INITIAL_STATE_MSFEN);
@@ -277,6 +285,26 @@ public class Board {
         return Collections.unmodifiableSet(legalMoves);
     }
 
+    public long getStartTimeStamp() {
+        return startTimeStamp;
+    }
+
+    public long getLastDropTimeStampSente() {
+        return lastDropTimeStampSente;
+    }
+
+    public void setLastDropTimeStampSente(long lastDropTimeStampSente) {
+        this.lastDropTimeStampSente = lastDropTimeStampSente;
+    }
+
+    public long getLastDropTimeStampGote() {
+        return lastDropTimeStampGote;
+    }
+
+    public void setLastDropTimeStampGote(long lastDropTimeStampGote) {
+        this.lastDropTimeStampGote = lastDropTimeStampGote;
+    }
+
     private void updateLegalMoves() {
         for (Piece p : getPiecesOnBoard()) {
             p.updateLegalMoves(this);
@@ -292,6 +320,10 @@ public class Board {
     public boolean commitMove(AbstractMove move) {
         if (move == null) {
             throw new GameException("Illegal move.");
+        }
+
+        if (!move.offCooldown()) {
+            throw new MoveException("Piece on cooldown");
         }
 
         if (legalMoves.contains(move)) {
@@ -313,6 +345,14 @@ public class Board {
         movesPlayed.removeLast();
         updateLegalMoves();
         return true;
+    }
+
+    public void startGame() {
+        long timeStamp = TimeUtils.getCurrentTime();
+        startTimeStamp = timeStamp;
+        for (Piece p : getPiecesOnBoard()) {
+            p.setLastMoved(timeStamp);
+        }
     }
 
     public String printBoardInt() {

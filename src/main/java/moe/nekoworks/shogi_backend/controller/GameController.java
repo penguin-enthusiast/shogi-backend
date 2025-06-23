@@ -1,9 +1,12 @@
 package moe.nekoworks.shogi_backend.controller;
 
 import moe.nekoworks.shogi_backend.exception.GameException;
+import moe.nekoworks.shogi_backend.exception.MoveException;
 import moe.nekoworks.shogi_backend.model.*;
 import moe.nekoworks.shogi_backend.service.GameService;
 import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
+import moe.nekoworks.shogi_backend.shogi.move.BoardMove;
+import moe.nekoworks.shogi_backend.shogi.move.DropMove;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -19,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/game")
@@ -37,6 +39,13 @@ public class GameController {
     @SendToUser("/topic/game")
     public void create(@Header("simpSessionId") String sessionId) {
         Game game = gameService.createGame(sessionId);
+        joinGame(sessionId, game);
+    }
+
+    @MessageMapping("/create-engine")
+    @SendToUser("/topic/game")
+    public void createEngineGame(@Header("simpSessionId") String sessionId, @RequestBody CreateEngineGameRequest request) {
+        EngineGame game = gameService.createEngineGame(sessionId, request.getEngine());
         joinGame(sessionId, game);
     }
 
@@ -99,36 +108,53 @@ public class GameController {
     public void makeDrop(@DestinationVariable String gameId,
                          @Header("simpSessionId") String sessionId,
                          @RequestBody Drop drop) {
-        String destination = "/topic/game/" + gameId + "/move";
-        try {
-            Game game = getGame(gameId);
-            gameService.makeMove(game, sessionId, drop);
-            sendLegalMoves(gameId);
-            sendMove(gameId, drop);
-        } catch (GameException e) {
-            // TODO do something with the exception
-            simpMessagingTemplate.convertAndSend(destination, ResponseEntity.badRequest().build());
-        }
+        makeAbstractMove(gameId, sessionId, drop);
     }
 
     @MessageMapping("/game/{gameId}/move")
     public void makeMove(@DestinationVariable String gameId,
                          @Header("simpSessionId") String sessionId,
                          @RequestBody Move move) {
+        makeAbstractMove(gameId, sessionId, move);
+        }
+
+    private void makeAbstractMove(String gameId, String sessionId, AbstractSGBoardAction<?> action) {
         String destination = "/topic/game/" + gameId + "/move";
         try {
             Game game = getGame(gameId);
-            boolean kingCapture = gameService.makeMove(game, sessionId, move);
-            sendMove(gameId, move);
-            sendLegalMoves(gameId);
-
-            if (kingCapture) {
-                sendGameOverMessage(gameId);
+            boolean kingCapture = false;
+            try {
+                kingCapture = gameService.makeMove(game, sessionId, action);
+            } catch (MoveException e) {
+                sendGameUpdate(game, null);
+            } finally {
+                postMoveLogic(game, action, kingCapture);
             }
         } catch (GameException e) {
             // TODO do something with the exception
             simpMessagingTemplate.convertAndSend(destination, ResponseEntity.badRequest().build());
         }
+    }
+
+    public void postMoveLogic(Game game, AbstractSGBoardAction<?> action, boolean kingCapture) {
+        boolean isEngineGame = game.getClass() == EngineGame.class;
+        sendMove(game.getGameId(), action);
+        if (kingCapture) {
+            sendGameOverMessage(game.getGameId());
+            return;
+        }
+        if (isEngineGame) {
+            EngineGame engineGame = (EngineGame) game;
+            AbstractMove engineMove = engineGame.makeEngineMove();
+            if (engineMove != null) {
+                if (engineMove.getClass() == BoardMove.class) {
+                    sendMove(game.getGameId(), new Move((BoardMove) engineMove));
+                } else if (engineMove.getClass() == DropMove.class) {
+                    sendMove(game.getGameId(), new Drop((DropMove) engineMove));
+                }
+            }
+        }
+        sendLegalMoves(game.getGameId());
     }
 
     public void sendLegalMoves(String gameId) {
