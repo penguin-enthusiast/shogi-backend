@@ -47,7 +47,7 @@ public class GameService {
     }
 
     public Game connectToRandomGame(String playerId) {
-        Game game = gameRepository.findAvailableGame();
+        Game game = gameRepository.findAvailableGame(playerId);
         game.joinGame(playerId);
         return game;
     }

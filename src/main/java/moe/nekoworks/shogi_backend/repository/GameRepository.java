@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 @Repository
 public class GameRepository {
@@ -33,8 +34,8 @@ public class GameRepository {
         return null;
     }
 
-    public Game findAvailableGame() {
-        List<Game> availableGames = games.values().stream().filter(g -> g.getStatus() == GameStatus.WAITING).toList();
+    public Game findAvailableGame(String playerId) {
+        List<Game> availableGames = games.values().stream().filter(g -> g.getStatus() == GameStatus.WAITING && !Objects.equals(g.getPlayer1(), playerId)).toList();
         if(availableGames.isEmpty()) {
             throw new RuntimeException();
         }
