@@ -17,8 +17,8 @@ public class Drop extends AbstractSGBoardAction<DropMove> {
     }
 
     public Drop(DropMove dropMove) {
-        this.piece = new SGPiece(dropMove.getPieceType(), dropMove.isSente());
-        this.key = Key.convertSquareToKey(dropMove.getTargetSquare());
+        piece = new SGPiece(dropMove.getPieceType(), dropMove.isSente());
+        key = Key.convertSquareToKey(dropMove.getTargetSquare());
     }
 
 

@@ -327,10 +327,10 @@ public class Board {
         }
 
         if (legalMoves.contains(move)) {
-            boolean kingCapture = move.makeMove();
+            move.makeMove();
             movesPlayed.add(new ImmutablePair<>(move, move.toString()));
             updateLegalMoves();
-            return kingCapture;
+            return true;
         }
         throw new GameException("Illegal move.");
     }
@@ -351,7 +351,7 @@ public class Board {
         long timeStamp = TimeUtils.getCurrentTime();
         startTimeStamp = timeStamp;
         for (Piece p : getPiecesOnBoard()) {
-            p.setLastMoved(timeStamp);
+            p.setLastMoved(timeStamp - cooldown);
         }
     }
 
@@ -454,6 +454,10 @@ public class Board {
         sfen[2] = Integer.toString(movesPlayed.size() + 1);
 
         return sfen;
+    }
+    public String getBoardSfenString() {
+        String[] sfen = getBoardSfen();
+        return sfen[0] + " " + sfen[1] + " " + sfen[2];
     }
 
     @Override

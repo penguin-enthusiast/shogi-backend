@@ -60,6 +60,11 @@ public class BoardMove extends AbstractMove {
         return isCapture;
     }
 
+    @Override
+    public boolean isKingCapture() {
+        return isCapture() && (capturedPiece.getPieceEnum() == (isSente() ? PieceEnum.OU : PieceEnum.GYOKU));
+    }
+
     private boolean isCapturedPieceIsPromoted() {
         return capturedPieceIsPromoted;
     }
@@ -70,14 +75,10 @@ public class BoardMove extends AbstractMove {
     }
 
     @Override
-    public boolean makeMove() {
-        boolean kingCapture = false;
+    public void makeMove() {
         Board board = getBoard();
         if (isCapture()) {
             Piece capturedPiece = getCapturedPiece();
-            if (capturedPiece.getPieceEnum() == (isSente() ? PieceEnum.OU : PieceEnum.GYOKU)) {
-                kingCapture = true;
-            }
             capturedPiece.setInHand(true);
             capturedPiece.setSente(isSente());
             capturedPiece.clearLegalMoves();
@@ -94,7 +95,6 @@ public class BoardMove extends AbstractMove {
         long timeStamp = TimeUtils.getCurrentTime();
         piece.setLastMoved(timeStamp);
         super.setTimestamp(timeStamp);
-        return kingCapture;
     }
 
     @Override
@@ -135,10 +135,21 @@ public class BoardMove extends AbstractMove {
         return Objects.hash(piece, targetSquare, isPromotion);
     }
 
+    @Override
+    public String notationInt() {
+        return (isSente() ? '☗' : '☖') +
+                (isPromotion ? getPieceType().getSymbol().substring(1) : getPieceType().getSymbol()) +
+                (isAmbiguous() ? getOriginSquare().toString() : "") +
+                (isCapture ? 'x' : "") +
+                getTargetSquare().toString() +
+                (isPromotion ? '+' : "");
+    }
+
     // Very complicated disambiguation rules for japanese notation.
     // see: https://en.wikipedia.org/wiki/Shogi_notation#Ambiguity_resolution:_Movement_description
+    // For the current move, find all pieces of the same type that can move to the same target square
     @Override
-    protected String getDisambiguationJP() {
+    protected Set<Piece> getAmbiguousPieces() {
         // Find all other pieces of the same type to disambiguate.
         Set<Piece> piecesOfSameType = getBoard().getPiecesOnBoard().stream()
                 .filter(p -> p.getPieceEnum() == piece.getPieceEnum()).collect(Collectors.toSet());
@@ -150,6 +161,13 @@ public class BoardMove extends AbstractMove {
                 .contains(targetSquare));
         // The set piecesOfSameType should now only contain pieces of the same type as the one
         // currently being moved that can also move to the square being moved to.
+        return piecesOfSameType;
+    }
+
+    @Override
+    protected String getDisambiguationJP() {
+        // Find all other pieces of the same type to disambiguate.
+        Set<Piece> piecesOfSameType = getAmbiguousPieces();
         if (!piecesOfSameType.isEmpty()) {
             // Define booleans that represent movement direction relative to the piece and side,
             // hence the boolean operation with the piece's side.

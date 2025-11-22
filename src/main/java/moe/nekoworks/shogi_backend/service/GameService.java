@@ -67,7 +67,7 @@ public class GameService {
         return game;
     }
 
-    public boolean makeMove(Game game, String playerId, AbstractSGBoardAction<?> action) {
+    public AbstractMove makeMove(Game game, String playerId, AbstractSGBoardAction<?> action) {
         if (Utils.StringIsEmpty(game.getPlayer1()) || Utils.StringIsEmpty(game.getPlayer2())) {
             throw new GameException("The game hasn't started yet.");
         }
@@ -81,9 +81,9 @@ public class GameService {
         }
         AbstractMove move = action.buildMove(game.getBoard());
         if (isSente == move.isSente()) {
-            boolean kingCapture = game.getBoard().commitMove(move);
+            game.getBoard().commitMove(move);
             action.setTimestamp(move.getTimestamp());
-            return kingCapture;
+            return move;
         }
         throw new GameException("Invalid move.");
     }

@@ -1,10 +1,13 @@
 package moe.nekoworks.shogi_backend.shogi.move;
 
+import moe.nekoworks.shogi_backend.misc.TimeUtils;
 import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.Square;
+import moe.nekoworks.shogi_backend.shogi.piece.Piece;
 import moe.nekoworks.shogi_backend.shogi.piece.PieceEnum;
 
 import java.util.Objects;
+import java.util.Set;
 
 public abstract class AbstractMove {
 
@@ -43,30 +46,41 @@ public abstract class AbstractMove {
         return Objects.hashCode(targetSquare);
     }
 
-    public String notationJP(){
+    public String notationJP() {
         return (isSente() ? '☗' : '☖') +
-                getTargetSquareName(targetSquare) +
+                getTargetSquareNameJP() +
                 getPieceType().getNameJPShort() +
                 getDisambiguationJP();
     }
 
-    private String getTargetSquareName(Square square) {
-        if (getBoard().getLastMove() != null) {
-            Square prevSquare = getBoard().getLastMove().targetSquare;
-            if (square == prevSquare) {
-                return "同　";
-            }
+    public String getMoveTime() {
+        return TimeUtils.convertTimeHumanReadable(getBoard().getStartTimeStamp(), getTimestamp());
+    }
+
+    public abstract String notationInt();
+
+    protected String getTargetSquareNameJP() {
+        if (getBoard().getLastMove() != null && targetSquare == getBoard().getLastMove().targetSquare) {
+            return "同　";
         }
-        return targetSquare.getSquareNameJP();
+        return targetSquare.toString();
     }
 
     public abstract PieceEnum getPieceType();
 
-    public abstract boolean makeMove();
+    public abstract boolean isKingCapture();
+
+    public abstract void makeMove();
 
     public abstract void undoMove();
 
     public abstract boolean offCooldown();
+
+    protected boolean isAmbiguous() {
+        return !getAmbiguousPieces().isEmpty();
+    }
+
+    protected abstract Set<Piece> getAmbiguousPieces();
 
     protected abstract String getDisambiguationJP();
 
@@ -75,6 +89,6 @@ public abstract class AbstractMove {
 
     @Override
     public String toString () {
-        return notationJP();
+        return notationInt() + "-" + getMoveTime();
     }
 }

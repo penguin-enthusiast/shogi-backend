@@ -46,6 +46,6 @@ public class AbstractSquare {
 
     @Override
     public String toString() {
-        return getSquareNameJP();
+        return getSquareNameInt();
     }
 }

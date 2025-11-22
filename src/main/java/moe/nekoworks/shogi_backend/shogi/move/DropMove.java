@@ -25,7 +25,12 @@ public class DropMove extends AbstractMove {
     }
 
     @Override
-    public boolean makeMove() {
+    public boolean isKingCapture() {
+        return false;
+    }
+
+    @Override
+    public void makeMove() {
         Piece piece = getBoard().getPiecesInHand().take(getPieceType(), isSente());
         piece.setSquare(getTargetSquare());
         getTargetSquare().setPiece(piece);
@@ -37,7 +42,6 @@ public class DropMove extends AbstractMove {
             getBoard().setLastDropTimeStampGote(timeStamp);
         }
         super.setTimestamp(timeStamp);
-        return false;
     }
 
     @Override
@@ -50,6 +54,14 @@ public class DropMove extends AbstractMove {
         getTargetSquare().setPiece(null);
         getBoard().getPiecesInHand().add(piece);
         super.setTimestamp(0);
+    }
+
+    @Override
+    public String notationInt() {
+        return (isSente() ? '☗' : '☖') +
+                getPieceType().getSymbol() +
+                "*" +
+                getTargetSquare().toString();
     }
 
     @Override
@@ -66,13 +78,21 @@ public class DropMove extends AbstractMove {
     }
 
     @Override
-    protected String getDisambiguationJP () {
-
+    protected Set<Piece> getAmbiguousPieces() {
         // Find all other pieces of the same type to disambiguate.
         Set<Piece> piecesOfSameType = getBoard().getPiecesOnBoard().stream()
                 .filter(p -> p.getPieceEnum() == piece && p.isSente() == isSente()).collect(Collectors.toSet());
         piecesOfSameType.removeIf(p -> p.getLegalMoves().isEmpty());
 
+        return piecesOfSameType;
+    }
+
+    // JP notation doesn't explicitly indicate a move is a drop.
+    // If a drop is made to a square in which a piece of the same type can move to,
+    // disambiguation is needed
+    @Override
+    protected String getDisambiguationJP () {
+        Set<Piece> piecesOfSameType = getAmbiguousPieces();
         if (!piecesOfSameType.isEmpty()) {
             Set<Square> targetSquares = new HashSet<>();
             for (Piece p : piecesOfSameType) {

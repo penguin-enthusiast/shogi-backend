@@ -87,6 +87,7 @@ public class Game {
 
     public void startGame() {
         status = GameStatus.IN_PROGRESS;
+        board.startGame();
     }
 
     public void finishGame() {

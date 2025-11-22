@@ -122,13 +122,13 @@ public class GameController {
         String destination = "/topic/game/" + gameId + "/move";
         try {
             Game game = getGame(gameId);
-            boolean kingCapture = false;
             try {
-                kingCapture = gameService.makeMove(game, sessionId, action);
+                AbstractMove move = gameService.makeMove(game, sessionId, action);
+                action.setMoveString(move.toString());
             } catch (MoveException e) {
                 sendGameUpdate(game, null);
             } finally {
-                postMoveLogic(game, action, kingCapture);
+                postMoveLogic(game, action);
             }
         } catch (GameException e) {
             // TODO do something with the exception
@@ -136,12 +136,15 @@ public class GameController {
         }
     }
 
-    public void postMoveLogic(Game game, AbstractSGBoardAction<?> action, boolean kingCapture) {
+    public void postMoveLogic(Game game, AbstractSGBoardAction<?> action) {
         boolean isEngineGame = game.getClass() == EngineGame.class;
         sendMove(game.getGameId(), action);
-        if (kingCapture) {
-            sendGameOverMessage(game.getGameId());
-            return;
+        if (action.getClass() == Move.class) {
+            Move move = (Move) action;
+            if (move.getCapturedPiece() != null && move.getCapturedPiece().getRole().equals("king")) {
+                sendGameOverMessage(game.getGameId());
+                return;
+            }
         }
         if (isEngineGame) {
             EngineGame engineGame = (EngineGame) game;
