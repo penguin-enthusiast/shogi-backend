@@ -45,7 +45,7 @@ public class GameController {
     @MessageMapping("/create-engine")
     @SendToUser("/topic/game")
     public void createEngineGame(@Header("simpSessionId") String sessionId, @RequestBody CreateEngineGameRequest request) {
-        EngineGame game = gameService.createEngineGame(sessionId, request.getEngine());
+        EngineGame game = gameService.createEngineGame(sessionId, request.getEngine(), this);
         joinGame(sessionId, game);
     }
 
@@ -118,7 +118,7 @@ public class GameController {
         makeAbstractMove(gameId, sessionId, move);
         }
 
-    private void makeAbstractMove(String gameId, String sessionId, AbstractSGBoardAction<?> action) {
+    public void makeAbstractMove(String gameId, String sessionId, AbstractSGBoardAction<?> action) {
         String destination = "/topic/game/" + gameId + "/move";
         try {
             Game game = getGame(gameId);
@@ -137,24 +137,12 @@ public class GameController {
     }
 
     public void postMoveLogic(Game game, AbstractSGBoardAction<?> action) {
-        boolean isEngineGame = game.getClass() == EngineGame.class;
         sendMove(game.getGameId(), action);
         if (action.getClass() == Move.class) {
             Move move = (Move) action;
             if (move.getCapturedPiece() != null && move.getCapturedPiece().getRole().equals("king")) {
                 sendGameOverMessage(game.getGameId());
                 return;
-            }
-        }
-        if (isEngineGame) {
-            EngineGame engineGame = (EngineGame) game;
-            AbstractMove engineMove = engineGame.makeEngineMove();
-            if (engineMove != null) {
-                if (engineMove.getClass() == BoardMove.class) {
-                    sendMove(game.getGameId(), new Move((BoardMove) engineMove));
-                } else if (engineMove.getClass() == DropMove.class) {
-                    sendMove(game.getGameId(), new Drop((DropMove) engineMove));
-                }
             }
         }
         sendLegalMoves(game.getGameId());

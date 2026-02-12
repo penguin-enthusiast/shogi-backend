@@ -1,5 +1,6 @@
 package moe.nekoworks.shogi_backend.service;
 
+import moe.nekoworks.shogi_backend.controller.GameController;
 import moe.nekoworks.shogi_backend.exception.GameException;
 import moe.nekoworks.shogi_backend.misc.Utils;
 import moe.nekoworks.shogi_backend.model.AbstractSGBoardAction;
@@ -30,8 +31,8 @@ public class GameService {
         return game;
     }
 
-    public EngineGame createEngineGame(String playerId, String engineName) {
-        EngineGame game = new EngineGame(playerId, engineName);
+    public EngineGame createEngineGame(String playerId, String engineName, GameController gameController) {
+        EngineGame game = new EngineGame(playerId, engineName, gameController);
         game.setPlayer2Ready(true);
         gameRepository.save(game);
         return game;

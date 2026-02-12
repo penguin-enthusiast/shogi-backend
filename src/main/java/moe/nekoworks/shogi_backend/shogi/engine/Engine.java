@@ -1,16 +1,17 @@
 package moe.nekoworks.shogi_backend.shogi.engine;
 
+import moe.nekoworks.shogi_backend.model.Game;
 import moe.nekoworks.shogi_backend.shogi.Board;
 import moe.nekoworks.shogi_backend.shogi.move.AbstractMove;
 
-public abstract class Engine {
+public abstract class Engine implements Runnable {
 
     // only plays as gote for now
     private boolean isSente = false;
-    private final Board board;
+    protected final Game game;
 
-    public Engine(Board board) {
-        this.board = board;
+    public Engine(Game game) {
+        this.game = game;
     }
 
     public boolean isSente() {
@@ -21,10 +22,10 @@ public abstract class Engine {
         isSente = sente;
     }
 
-    public static Engine getEngineFromName(String engineName, Board board) {
+    public static Engine getEngineFromName(String engineName, Game game) {
         switch (engineName) {
             case "random":
-                return new RandomMoveEngine(board);
+                return new RandomMoveEngine(game);
             default:
                 return null;
         }
@@ -32,5 +33,6 @@ public abstract class Engine {
 
     public abstract String getName();
 
-    public abstract AbstractMove makeEngineMove(Board board);
+    // engine logic should go here
+    public abstract void run();
 }
